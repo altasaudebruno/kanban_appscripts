@@ -59,7 +59,7 @@ por `LockService`, exige a **versão** esperada (controle otimista), a exclusão
 - **Visão do gestor** somente-leitura (`Gestor.html`): % por bloco, onde o
   Bruno está hoje, o que está em andamento, bloqueios e última movimentação.
 - **Resumo do dia**: foco, atrasadas, em UAT e "o que testar hoje".
-- **Seed do planejamento**: 70 tarefas B00–B07 com critérios de aceite e teste
+- **Seed do planejamento**: 80 tarefas B00–B07 com critérios de aceite e teste
   do dia, idempotente por título.
 - **Relatório por e-mail ao gestor**, em um clique (seção 4.1).
 - **Filtro por bloco** no quadro, que aparece só quando o projeto usa blocos.
@@ -70,7 +70,7 @@ por `LockService`, exige a **versão** esperada (controle otimista), a exclusão
 
 1. Abrir a planilha do Kanban.
 2. Menu **Kanban → Carregar planejamento Docfinance**.
-   Cria o projeto `DF` e as 70 tarefas. Rodar de novo nunca duplica — se a
+   Cria o projeto `DF` e as 80 tarefas. Rodar de novo nunca duplica — se a
    mensagem disser que faltaram tarefas por tempo de execução, é só repetir.
 3. Menu **Kanban → Limpar dados antigos…**
    Remove o que sobrou da planilha copiada (projeto `AG` e qualquer outro que
@@ -348,7 +348,7 @@ decisão consciente.
   numa conta pessoal — aí o caminho é o relatório por e-mail, que funciona para
   qualquer destinatário.
 
-### C2 — O seed pode não carregar as 70 tarefas numa execução só
+### C2 — O seed pode não carregar as 80 tarefas numa execução só
 
 - **Onde:** `Plano.js`, função `seedPlano` — cada tarefa entra por
   `insertTaskLocked_`, que faz várias gravações na planilha mais uma linha de
@@ -379,7 +379,7 @@ decisão consciente.
 | `Plano.js` | agenda, visão do gestor, resumo do dia, motor do seed |
 | `Relatorio.js` | relatório de acompanhamento por e-mail (gestor e teste) |
 | `Limpeza.js` | prévia e remoção dos dados legados, em blocos contíguos |
-| `PlanoDocfinance.js` | as 70 tarefas B00–B07 do MVP |
+| `PlanoDocfinance.js` | as 80 tarefas B00–B07 do MVP (7/10/10/9/12/10/10/12) |
 | `CliPlano.js` | comandos de terminal de alto nível |
 | `CliApi.js` | `cliDispatch`, contrato estrito com versão |
 | `Kanban.html` | quadro de operação |

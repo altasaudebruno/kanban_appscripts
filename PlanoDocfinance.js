@@ -6,6 +6,8 @@
  * aceite e — o que o quadro não tinha — o que testar no dia para provar
  * que a entrega está de pé.
  *
+ * São 80 tarefas: B00 7, B01 10, B02 10, B03 9, B04 12, B05 10, B06 10, B07 12.
+ *
  * Carregar com: menu Kanban → "Carregar planejamento Docfinance",
  * ou `clasp run-function carregarPlanejamentoDocfinance`.
  * É idempotente por título: rodar duas vezes não duplica nada.
