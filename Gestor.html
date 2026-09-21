@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Acompanhamento — visão do gestor</title>
+<style>
+  :root {
+    --bg: #0f172a; --panel: #1e293b; --panel-2: #273449; --line: #334155;
+    --ink: #e2e8f0; --ink-soft: #94a3b8; --ink-dim: #64748b;
+    --ok: #4ade80; --run: #38bdf8; --late: #f87171; --today: #fbbf24; --idle: #64748b;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: Inter, Roboto, "Segoe UI", Arial, sans-serif; font-size: 14px; line-height: 1.5;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 24px 20px 64px; }
+  header { display: flex; flex-wrap: wrap; gap: 12px; align-items: baseline; justify-content: space-between; margin-bottom: 4px; }
+  h1 { font-size: 20px; margin: 0; font-weight: 650; letter-spacing: -0.01em; }
+  .badge {
+    font-size: 11px; text-transform: uppercase; letter-spacing: .08em; font-weight: 600;
+    background: var(--panel-2); color: var(--ink-soft); border: 1px solid var(--line);
+    border-radius: 999px; padding: 3px 10px;
+  }
+  .sub { color: var(--ink-soft); font-size: 13px; margin: 0 0 24px; }
+  h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .09em; color: var(--ink-dim);
+       font-weight: 650; margin: 32px 0 12px; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
+
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+  .kpi { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+  .kpi .n { font-size: 26px; font-weight: 650; letter-spacing: -0.02em; }
+  .kpi .l { font-size: 12px; color: var(--ink-soft); }
+
+  .timeline { display: grid; grid-template-columns: repeat(auto-fit, minmax(128px, 1fr)); gap: 8px; }
+  .cp { background: var(--panel); border: 1px solid var(--line); border-left-width: 3px;
+        border-radius: 8px; padding: 10px 12px; }
+  .cp.HOJE { border-left-color: var(--today); background: var(--panel-2); }
+  .cp.is-done { border-left-color: var(--ok); }
+  .cp.is-late { border-left-color: var(--late); }
+  .cp.is-next { border-left-color: var(--idle); }
+  .cp .d { font-weight: 650; font-size: 13px; }
+  .cp .b { font-size: 11px; color: var(--ink-soft); margin-top: 2px; }
+  .cp .p { font-size: 11px; margin-top: 6px; color: var(--ink-dim); }
+  .cp .meta { font-size: 11px; color: var(--ink-soft); margin-top: 6px; display: none; }
+  .cp.HOJE .meta { display: block; color: var(--ink); }
+
+  .blocks { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px; }
+  .block { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+  .block .top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .block .id { font-weight: 650; font-size: 15px; }
+  .block .pct { font-variant-numeric: tabular-nums; font-weight: 650; }
+  .bar { height: 6px; border-radius: 999px; background: var(--panel-2); margin: 10px 0 8px; overflow: hidden; }
+  .bar > i { display: block; height: 100%; background: var(--run); border-radius: 999px; }
+  .block.done .bar > i { background: var(--ok); }
+  .block .line { font-size: 12px; color: var(--ink-soft); }
+  .state { font-size: 10.5px; text-transform: uppercase; letter-spacing: .07em; font-weight: 650; }
+  .state.ok { color: var(--ok); } .state.run { color: var(--run); }
+  .state.late { color: var(--late); } .state.idle { color: var(--ink-dim); }
+
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .07em;
+       color: var(--ink-dim); font-weight: 650; padding: 0 10px 8px 0; }
+  td { padding: 8px 10px 8px 0; border-top: 1px solid var(--line); vertical-align: top; font-size: 13px; }
+  td.id { font-family: "Roboto Mono", Consolas, monospace; font-size: 12px; color: var(--ink-soft); white-space: nowrap; }
+  .tag { font-size: 11px; font-weight: 600; border-radius: 6px; padding: 2px 7px;
+         background: var(--panel-2); border: 1px solid var(--line); white-space: nowrap; }
+  .test { color: var(--ink-soft); font-size: 12px; margin-top: 3px; }
+  .empty { color: var(--ink-dim); font-size: 13px; padding: 4px 0; }
+  .scroll { overflow-x: auto; }
+  footer { margin-top: 36px; color: var(--ink-dim); font-size: 12px; border-top: 1px solid var(--line); padding-top: 12px; }
+  .err { background: #3f1d1d; border: 1px solid #7f1d1d; color: #fecaca; border-radius: 10px; padding: 14px 16px; }
+  @media (max-width: 520px) { .wrap { padding: 16px 12px 48px; } h1 { font-size: 17px; } }
+</style>
+</head>
+<body>
+<div class="wrap" id="app">
+  <p class="sub">Carregando o andamento…</p>
+</div>
+
+<script>
+function esc(value) {
+  return String(value === undefined || value === null ? '' : value)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function dataCurta(iso) {
+  var m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return m ? m[3] + '/' + m[2] : '—';
+}
+
+function dataHora(iso) {
+  var m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/);
+  return m ? m[3] + '/' + m[2] + ' às ' + m[4] + ':' + m[5] : 'sem registro';
+}
+
+var CLASSE_ESTADO = {
+  'CONCLUÍDO': 'ok', 'EM ANDAMENTO': 'run', 'PARCIAL': 'run',
+  'ATRASADO': 'late', 'HOJE': 'run', 'PREVISTO': 'idle',
+  'NÃO INICIADO': 'idle', 'SEM TAREFAS': 'idle'
+};
+
+function checkpointClasse(estado) {
+  if (estado === 'CONCLUÍDO') return 'is-done';
+  if (estado === 'ATRASADO') return 'is-late';
+  if (estado === 'HOJE') return 'HOJE';
+  return 'is-next';
+}
+
+function render(view) {
+  var html = '';
+
+  html += '<header><h1>' + esc(view.project.name) + '</h1>' +
+    '<span class="badge">somente leitura</span></header>';
+  html += '<p class="sub">Andamento de ' + esc(view.project.id) + ' em ' + dataCurta(view.today) +
+    (view.goLive ? ' · piloto em ' + dataCurta(view.goLive) : '') +
+    ' · última movimentação ' + dataHora(view.lastUpdate) + '</p>';
+
+  var t = view.totals;
+  html += '<div class="kpis">' +
+    '<div class="kpi"><div class="n">' + t.pct + '%</div><div class="l">do plano concluído</div></div>' +
+    '<div class="kpi"><div class="n">' + t.done + ' / ' + t.total + '</div><div class="l">tarefas em produção</div></div>' +
+    '<div class="kpi"><div class="n">' + view.inFlight.length + '</div><div class="l">em andamento agora</div></div>' +
+    '<div class="kpi"><div class="n">' + view.blocked.length + '</div><div class="l">bloqueadas</div></div>' +
+    '</div>';
+
+  if (view.todayCheckpoint) {
+    html += '<h2>Onde ele está hoje</h2><div class="panel">' +
+      '<strong>' + esc(view.todayCheckpoint.label) + ' · ' +
+      esc(view.todayCheckpoint.blocks.join(' + ')) + '</strong>' +
+      '<div class="line" style="margin-top:4px;color:var(--ink-soft)">' +
+      esc(view.todayCheckpoint.meta) + '</div></div>';
+  }
+
+  if (view.checkpoints.length) {
+    html += '<h2>Agenda até o piloto</h2><div class="timeline">';
+    view.checkpoints.forEach(function (cp) {
+      html += '<div class="cp ' + checkpointClasse(cp.state) + '">' +
+        '<div class="d">' + dataCurta(cp.date) + '</div>' +
+        '<div class="b">' + esc(cp.blocks.join(' + ')) + '</div>' +
+        '<div class="p"><span class="state ' + (CLASSE_ESTADO[cp.state] || 'idle') + '">' +
+        esc(cp.state) + '</span> · ' + cp.pct + '%</div>' +
+        '<div class="meta">' + esc(cp.meta) + '</div></div>';
+    });
+    html += '</div>';
+  }
+
+  html += '<h2>Progresso por bloco</h2><div class="blocks">';
+  view.blocks.forEach(function (b) {
+    html += '<div class="block' + (b.state === 'CONCLUÍDO' ? ' done' : '') + '">' +
+      '<div class="top"><span class="id">' + esc(b.id) + '</span>' +
+      '<span class="pct">' + b.pct + '%</span></div>' +
+      '<div class="bar"><i style="width:' + Math.max(b.pct, 1) + '%"></i></div>' +
+      '<div class="line"><span class="state ' + (CLASSE_ESTADO[b.state] || 'idle') + '">' +
+      esc(b.state) + '</span> · ' + b.done + ' de ' + b.total + ' concluídas' +
+      (b.blocked ? ' · <span class="state late">' + b.blocked + ' bloqueada(s)</span>' : '') + '</div>' +
+      '<div class="line">' + (b.lastUpdate
+        ? 'mexido em ' + dataHora(b.lastUpdate)
+        : 'nenhuma movimentação registrada') + '</div>' +
+      '</div>';
+  });
+  html += '</div>';
+
+  html += '<h2>Em andamento agora</h2>';
+  if (view.inFlight.length) {
+    html += '<div class="panel scroll"><table><thead><tr><th>Tarefa</th><th>Bloco</th>' +
+      '<th>Etapa</th><th>Prazo</th></tr></thead><tbody>';
+    view.inFlight.forEach(function (task) {
+      html += '<tr><td><strong>' + esc(task.title) + '</strong>' +
+        (task.oQueTestar ? '<div class="test">Validação: ' + esc(task.oQueTestar) + '</div>' : '') +
+        '</td><td class="id">' + esc(task.bloco || '—') + '</td>' +
+        '<td><span class="tag">' + esc(task.status) + '</span></td>' +
+        '<td class="id">' + dataCurta(task.dueDate) + '</td></tr>';
+    });
+    html += '</tbody></table></div>';
+  } else {
+    html += '<div class="panel"><div class="empty">Nenhuma tarefa em DEV, DEVMERGE ou UAT neste momento.</div></div>';
+  }
+
+  if (view.blocked.length) {
+    html += '<h2>Bloqueios</h2><div class="panel scroll"><table><thead><tr>' +
+      '<th>Tarefa</th><th>Motivo</th><th>Desde</th></tr></thead><tbody>';
+    view.blocked.forEach(function (item) {
+      html += '<tr><td><strong>' + esc(item.title) + '</strong> <span class="id">' +
+        esc(item.bloco || '') + '</span></td><td>' + esc(item.reason) + '</td>' +
+        '<td class="id">' + dataCurta(item.since) + '</td></tr>';
+    });
+    html += '</tbody></table></div>';
+  }
+
+  html += '<footer>Retrato gerado em ' + dataHora(view.generatedAt) +
+    '. Esta página não altera nada no quadro: é um espelho de leitura.</footer>';
+
+  document.getElementById('app').innerHTML = html;
+}
+
+function falhou(erro) {
+  document.getElementById('app').innerHTML =
+    '<div class="err"><strong>Não foi possível carregar o andamento.</strong><br>' +
+    esc(erro && erro.message ? erro.message : erro) + '</div>';
+}
+
+// O parâmetro chega do servidor: dentro do iframe do Apps Script a query
+// string da URL pai não é visível para o script da página.
+// O servidor já reduziu o valor a [A-Z0-9_-]; por isso a impressão sem escape
+// de HTML é segura aqui e continua sendo JS válido.
+var PROJETO = <?!= JSON.stringify(projeto || '') ?>;
+
+google.script.run.withSuccessHandler(render).withFailureHandler(falhou)
+  .getManagerView(PROJETO);
+</script>
+</body>
+</html>

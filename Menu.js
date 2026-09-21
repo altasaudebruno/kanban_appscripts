@@ -6,6 +6,11 @@ function onOpen() {
   SpreadsheetApp.getUi()
     .createMenu('Kanban')
     .addItem('Abrir Quadro Kanban', 'abrirQuadro')
+    .addItem('Visão do gestor (somente leitura)', 'abrirVisaoGestor')
+    .addItem('Meu dia — o que fazer e testar', 'mostrarResumoDoDia')
+    .addSeparator()
+    .addItem('Carregar planejamento Docfinance', 'carregarPlanejamentoDocfinanceUi')
+    .addItem('Dar acesso de leitura ao gestor…', 'darAcessoAoGestorUi')
     .addSeparator()
     .addItem('Instalar (estrutura + dados)', 'instalar')
     .addItem('Reconstruir formatação/fórmulas', 'reconstruir')
@@ -23,6 +28,86 @@ function abrirQuadro() {
   var html = HtmlService.createHtmlOutputFromFile('Kanban')
     .setWidth(1550).setHeight(920);
   SpreadsheetApp.getUi().showModalDialog(html, 'Quadro Kanban — Controle Ágil');
+}
+
+function abrirVisaoGestor() {
+  var template = HtmlService.createTemplateFromFile('Gestor');
+  template.projeto = '';
+  var html = template.evaluate().setWidth(1200).setHeight(860);
+  SpreadsheetApp.getUi().showModalDialog(html, 'Acompanhamento — visão do gestor');
+}
+
+function mostrarResumoDoDia() {
+  var ui = SpreadsheetApp.getUi();
+  var resumo;
+  try {
+    resumo = resumoDia();
+  } catch (error) {
+    ui.alert('Resumo do dia', String(error && error.message ? error.message : error), ui.ButtonSet.OK);
+    return;
+  }
+
+  var linhas = [resumo.label + ' — ' + resumo.project.name, ''];
+  if (resumo.checkpoint) {
+    linhas.push('Checkpoint de hoje: ' + resumo.checkpoint.blocks.join(' + '));
+    linhas.push(resumo.checkpoint.meta);
+  } else {
+    linhas.push('Nenhum checkpoint da agenda cai em hoje.');
+  }
+  linhas.push('');
+  linhas.push('Plano: ' + resumo.totals.pct + '% concluído (' +
+    resumo.totals.done + '/' + resumo.totals.total + ' em produção).');
+
+  function bloco(titulo, lista, formatar) {
+    if (!lista.length) return;
+    linhas.push('');
+    linhas.push(titulo.toUpperCase() + ' (' + lista.length + ')');
+    lista.slice(0, 12).forEach(function (item) { linhas.push('  ' + formatar(item)); });
+    if (lista.length > 12) linhas.push('  … e mais ' + (lista.length - 12) + '.');
+  }
+
+  bloco('Bloqueadas', resumo.bloqueadas, function (t) { return t.id + ' · ' + t.title; });
+  bloco('Atrasadas', resumo.atrasadas, function (t) { return t.id + ' · ' + t.title + ' (prazo ' + t.dueDate + ')'; });
+  bloco('Em andamento', resumo.emAndamento, function (t) { return t.id + ' · ' + t.title + ' [' + t.status + ']'; });
+  bloco('Aguardando validação (UAT)', resumo.emUat, function (t) { return t.id + ' · ' + t.title; });
+  bloco('Foco de hoje', resumo.foco, function (t) { return t.id + ' · ' + t.title + ' [' + t.status + ']'; });
+  bloco('O que testar hoje', resumo.oQueTestarHoje, function (t) { return t.id + ' · ' + t.teste; });
+
+  ui.alert('Meu dia', linhas.join('\n'), ui.ButtonSet.OK);
+}
+
+function carregarPlanejamentoDocfinanceUi() {
+  var ui = SpreadsheetApp.getUi();
+  var resultado;
+  try {
+    resultado = carregarPlanejamentoDocfinance();
+  } catch (error) {
+    ui.alert('Carregar planejamento', String(error && error.message ? error.message : error), ui.ButtonSet.OK);
+    return;
+  }
+  ui.alert('Planejamento Docfinance',
+    (resultado.projectCreated ? 'Projeto ' + resultado.projectId + ' criado.\n' : '') +
+    resultado.createdCount + ' tarefa(s) criada(s).\n' +
+    resultado.skippedCount + ' já existia(m) e foi(ram) preservada(s).\n\n' +
+    'Selecione o projeto ' + resultado.projectId + ' no quadro para vê-las.',
+    ui.ButtonSet.OK);
+}
+
+function darAcessoAoGestorUi() {
+  var ui = SpreadsheetApp.getUi();
+  var resposta = ui.prompt('Acesso de leitura ao gestor',
+    'E-mail do gestor (recebe papel VIEWER, que não altera nada):', ui.ButtonSet.OK_CANCEL);
+  if (resposta.getSelectedButton() !== ui.Button.OK) return;
+  try {
+    var resultado = darAcessoAoGestor(resposta.getResponseText());
+    ui.alert('Acesso concedido',
+      resultado.email + ' agora é VIEWER do projeto ' + resultado.projectId + '.\n\n' +
+      'Lembre de compartilhar ESTA PLANILHA com ele como Leitor: a implantação ' +
+      'roda como o usuário que acessa.',
+      ui.ButtonSet.OK);
+  } catch (error) {
+    ui.alert('Acesso ao gestor', String(error && error.message ? error.message : error), ui.ButtonSet.OK);
+  }
 }
 
 function instalar() {

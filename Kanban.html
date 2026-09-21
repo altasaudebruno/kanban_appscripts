@@ -197,6 +197,8 @@
   .flow-tag { font-size: 9.5px; font-weight: 700; border-radius: 3px; padding: 2px 6px; }
   .flow-tag.blocked { background: color-mix(in srgb, var(--danger) 18%, var(--surface)); color: var(--danger); }
   .flow-tag.uat { background: color-mix(in srgb, #008DA6 20%, var(--surface)); color: #008DA6; }
+  .flow-tag.bloco { background: color-mix(in srgb, #1F4E79 16%, var(--surface)); color: #1F4E79;
+                    letter-spacing: .4px; }
   .priority-label { text-transform: uppercase; letter-spacing: .25px; }
   .card-actions {
     display: flex; justify-content: flex-end; gap: 5px; padding-top: 7px; margin-top: 7px;
@@ -480,6 +482,15 @@
         <div class="field full">
           <label for="f_subtarefas">Subtarefas e critérios de aceite</label>
           <textarea id="f_subtarefas" rows="4" placeholder="• item 1&#10;• item 2"></textarea>
+        </div>
+        <div class="field full">
+          <label for="f_oQueTestar">O que testar</label>
+          <textarea id="f_oQueTestar" rows="3"
+                    placeholder="O teste prático que prova a entrega: comando, tela ou cenário."></textarea>
+        </div>
+        <div class="field">
+          <label for="f_bloco">Bloco</label>
+          <input id="f_bloco" maxlength="16" autocomplete="off" placeholder="ex.: B01">
         </div>
         <div class="field">
           <label for="f_prioridade">Prioridade (1–5)</label>
@@ -1749,7 +1760,8 @@
       if (!matchesPeriod_(t, PREFS.period)) return false;
       if (q) {
         var hay = (t.id + ' ' + t.tarefa + ' ' + t.descricao + ' ' + t.subtarefas + ' ' +
-          t.observacoes + ' ' + t.dependencias + ' ' + t.responsavel).toLowerCase();
+          t.observacoes + ' ' + t.dependencias + ' ' + t.responsavel + ' ' +
+          (t.bloco || '') + ' ' + (t.oQueTestar || '')).toLowerCase();
         if (hay.indexOf(q) === -1) return false;
       }
       return true;
@@ -1894,6 +1906,7 @@
       ? '<div class="due' + (isOverdue_(t) ? ' overdue' : '') + '">Prazo: ' + esc(formatShortDate_(t.dueDate)) + (isOverdue_(t) ? ' · atrasada' : '') + '</div>'
       : '<div class="due">Sem prazo</div>';
     var flowTags = '';
+    if (t.bloco) flowTags += '<span class="flow-tag bloco">' + esc(t.bloco) + '</span>';
     if (t.blocker) flowTags += '<span class="flow-tag blocked">BLOQUEADA</span>';
     if (t.uat && t.uat.status === 'PENDING') flowTags += '<span class="flow-tag uat">UAT PENDENTE</span>';
     if (flowTags) flowTags = '<div class="flow-tags">' + flowTags + '</div>';
@@ -2052,6 +2065,8 @@
     setVal('f_tarefa', t ? t.tarefa : '');
     setVal('f_descricao', t ? t.descricao : '');
     setVal('f_subtarefas', t ? t.subtarefas : '');
+    setVal('f_oQueTestar', t ? (t.oQueTestar || '') : '');
+    setVal('f_bloco', t ? (t.bloco || '') : '');
     setVal('f_prioridade', t && t.prioridade !== '' ? String(t.prioridade) : '');
     setVal('f_dificuldade', t && t.dificuldade !== '' ? String(t.dificuldade) : '');
     setVal('f_status', t ? t.status : 'BACKLOG');
@@ -2317,6 +2332,8 @@
       tarefa: getVal('f_tarefa'),
       descricao: getVal('f_descricao'),
       subtarefas: getVal('f_subtarefas'),
+      oQueTestar: getVal('f_oQueTestar'),
+      bloco: getVal('f_bloco'),
       prioridade: getVal('f_prioridade'),
       dificuldade: getVal('f_dificuldade'),
       status: getVal('f_status'),
@@ -2443,7 +2460,8 @@
   function formFields_() {
     return {
       tarefa: getVal('f_tarefa'), descricao: getVal('f_descricao'),
-      subtarefas: getVal('f_subtarefas'), prioridade: getVal('f_prioridade'),
+      subtarefas: getVal('f_subtarefas'), oQueTestar: getVal('f_oQueTestar'),
+      bloco: getVal('f_bloco'), prioridade: getVal('f_prioridade'),
       dificuldade: getVal('f_dificuldade'), status: getVal('f_status'),
       responsavel: getVal('f_responsavel'), dependencias: getVal('f_dependencias'),
       observacoes: getVal('f_observacoes'), dataCriacao: getVal('f_dataCriacao'),
