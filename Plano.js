@@ -149,7 +149,9 @@ function planTotals_(tasks) {
 }
 
 function planBlocks_(tasks, lastActivityByTask, agenda) {
-  var index = {};
+  // Sem protótipo: o nome do bloco é texto livre, e um valor como
+  // "CONSTRUCTOR" acharia um membro herdado em vez de criar o bucket.
+  var index = Object.create(null);
   var order = [];
 
   function bucket(id) {
@@ -235,7 +237,7 @@ function checkpointState_(date, today, ratio) {
 function lastActivityByTask_(projectId) {
   var sh = ensureActivitySheet_();
   var last = sh.getLastRow();
-  var result = {};
+  var result = Object.create(null);
   if (last < 2) return result;
   var window = 3000;
   var startRow = Math.max(2, last - window + 1);
@@ -364,7 +366,8 @@ function seedPlano(projectId, definition, metadata) {
 
   withLock_(function () {
     var sh = mustBase_();
-    var existing = {};
+    // Chaveado por título, que é texto livre — ver a nota em planBlocks_.
+    var existing = Object.create(null);
     var last = sh.getLastRow();
     if (last >= 2) {
       sh.getRange(2, 1, last - 1, TASK_COLUMN_COUNT).getValues().forEach(function (row) {
