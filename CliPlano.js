@@ -50,6 +50,10 @@ function cliMeta_(projectId, action) {
   };
 }
 
+function cliTaskNumber_(id) {
+  return Number((String(id).match(/(\d+)$/) || [0, 0])[1]);
+}
+
 function cliTask_(projectId, taskId) {
   var context = getTaskContext(String(taskId || '').trim(), projectId);
   return context.task;
@@ -85,8 +89,12 @@ function criarTarefa(payload, projectId) {
   args.projectId = project;
   if (!args.status) args.status = 'NÃO-INICIADO';
   var board = createTask(args, meta);
+  // A tarefa nova ocupa a primeira linha livre, que não é necessariamente a
+  // última do array: entre as de mesmo título, a recém-criada é a de maior ID.
   var created = board.tasks.filter(function (task) {
     return planTitleKey_(task.tarefa) === planTitleKey_(args.tarefa);
+  }).sort(function (a, b) {
+    return cliTaskNumber_(a.id) - cliTaskNumber_(b.id);
   }).pop() || null;
   return cliOk_('criarTarefa', project, created);
 }
