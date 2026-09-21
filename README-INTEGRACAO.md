@@ -266,11 +266,17 @@ https://script.google.com/home/usersettings → ligar *"API do Google Apps Scrip
 **5.3 — Credenciais OAuth próprias para o `clasp`**
 1. No projeto GCP: **APIs e serviços → Tela de permissão OAuth** (tipo Interno).
 2. **Credenciais → Criar credenciais → ID do cliente OAuth → App para computador**.
-3. Baixar o JSON e rodar, na pasta do projeto:
+3. Baixar o JSON e rodar, na pasta do projeto — **com as duas flags**:
    ```bash
-   clasp login --creds caminho/do/client_secret.json --use-project-scopes
+   clasp login --creds caminho/do/client_secret.json --use-project-scopes --include-clasp-scopes
    ```
    (não versionar esse arquivo — o `.gitignore` já o ignora)
+
+   > **`--include-clasp-scopes` não é opcional.** `--use-project-scopes`
+   > sozinho gera um token com **apenas** os escopos do manifesto, sem
+   > `script.projects` — e aí o próprio `clasp` para de funcionar: `push`,
+   > `pull` e até `clone` passam a responder **`Insufficient Permission`**.
+   > Se você já caiu nisso, é só repetir o comando acima com as duas flags.
 
 **5.4 — Conferir que funcionou**
 ```bash
@@ -306,8 +312,10 @@ SpreadsheetApp.getActive. Required: spreadsheets`.
 
 1. **Gerar token novo para o `clasp`** — o token atual não tem os escopos:
    ```bash
-   clasp login --creds caminho/do/client_secret.json --use-project-scopes
+   clasp login --creds caminho/do/client_secret.json --use-project-scopes --include-clasp-scopes
    ```
+   Sem `--include-clasp-scopes`, o token sai sem `script.projects` e o `clasp`
+   responde `Insufficient Permission` até em `clone`. Veja o aviso em 5.3.
 2. **Reautorizar no navegador** na primeira vez que abrir o quadro ou usar o
    menu. A lista de escopos mudou, então o Google vai pedir a permissão de
    novo. É esperado — aceite.
@@ -316,6 +324,21 @@ SpreadsheetApp.getActive. Required: spreadsheets`.
 Na primeira vez que você usar o botão "Relatório ao gestor", o Google vai
 pedir para autorizar o envio de e-mail em seu nome (escopo novo no script).
 Aceitar é obrigatório para o relatório funcionar.
+
+**5.8 — `Insufficient Permission` em qualquer comando `clasp`**
+
+Sintoma: `clasp push`, `pull` ou `clone` respondem só `Insufficient Permission`.
+Causa: o token salvo não tem os escopos do próprio `clasp`. Acontece quando o
+login é feito com `--use-project-scopes` **sem** `--include-clasp-scopes`.
+
+Confirme quem está autenticado e com que cliente:
+```bash
+clasp show-authorized-user
+```
+Correção — repita o login com as duas flags:
+```bash
+clasp login --creds caminho/do/client_secret.json --use-project-scopes --include-clasp-scopes
+```
 
 **5.7 — Decisões que dependem de você**
 - Se quer a implantação com link próprio para o gestor (seção 4.2).
