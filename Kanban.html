@@ -407,6 +407,8 @@
     <button class="btn btn-ghost" id="inboxButton" onclick="openInbox_()">Inbox</button>
     <button class="btn btn-ghost" id="queryButton" onclick="openQuery_()">Consultar</button>
     <button class="btn btn-ghost" id="automationButton" onclick="openAutomation_()">Saúde do fluxo</button>
+    <button class="btn btn-ghost" id="reportButton" onclick="enviarRelatorioAoGestor_()"
+            title="Envia por e-mail o retrato do andamento ao gestor">Relatório ao gestor</button>
     <select id="projectSelect" onchange="onProjectChanged_()" aria-label="Projeto atual"></select>
     <button class="btn btn-ghost" onclick="openProjectModal_()">+ Projeto</button>
     <select id="filterResp" onchange="onPreferenceControlChanged_()" aria-label="Filtrar por responsável">
@@ -1296,6 +1298,39 @@
     if (!task || queryInFlight) return;
     closeQuery_();
     openModal(task);
+  }
+
+  // --------------------------------------------- relatório para o gestor ----
+
+  var reportInFlight = false;
+
+  function enviarRelatorioAoGestor_() {
+    if (reportInFlight) return;
+    var botao = document.getElementById('reportButton');
+    if (!confirm('Enviar agora o relatório de acompanhamento ao gestor por e-mail?')) return;
+
+    reportInFlight = true;
+    var rotulo = botao.textContent;
+    botao.disabled = true;
+    botao.textContent = 'Enviando…';
+
+    function encerrar() {
+      reportInFlight = false;
+      botao.disabled = false;
+      botao.textContent = rotulo;
+    }
+
+    google.script.run
+      .withSuccessHandler(function (resultado) {
+        encerrar();
+        toast('Relatório enviado para ' + resultado.destinatario + '.');
+      })
+      .withFailureHandler(function (erro) {
+        encerrar();
+        toast('Não foi possível enviar: ' +
+          (erro && erro.message ? erro.message : erro), true);
+      })
+      .enviarRelatorioAoGestorPadrao(currentProjectId);
   }
 
   // ---------------------------------------------------------- automação ----

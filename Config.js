@@ -150,8 +150,15 @@ var PROJECT_ROLES = { VIEWER: 'VIEWER', MEMBER: 'MEMBER', MANAGER: 'MANAGER', OW
 // administrada na planilha.
 var CONFIGURED_PROJECT_MEMBERS = [
   { projectId: 'AG', userEmail: 'bruno@altaservicosmedicos.com.br', role: 'MEMBER' },
-  { projectId: 'AG', userEmail: 'ricardo.santos@altaservicosmedicos.com.br', role: 'MEMBER' }
+  { projectId: 'AG', userEmail: 'ricardo.santos@altaservicosmedicos.com.br', role: 'MEMBER' },
+  // O gestor acompanha o MVP Docfinance em leitura. VIEWER é recusado em
+  // qualquer mutação por authorizeProject_ — ele vê, não mexe.
+  { projectId: 'DF', userEmail: 'geovane.barbosa@altaservicosmedicos.com.br', role: 'VIEWER' },
+  { projectId: 'DF', userEmail: 'bruno@altaservicosmedicos.com.br', role: 'OWNER' }
 ];
+
+// Destinatário padrão do relatório de acompanhamento.
+var GESTOR_EMAIL = 'geovane.barbosa@altaservicosmedicos.com.br';
 
 var COMO_USAR = [
   'Preencha apenas na aba BASE DE TAREFAS: Status e Responsável (listas suspensas), Percentual concluído (entre 0% e 100% — ex.: digite 50%), Datas (dd/mm/aaaa), Dependências e Observações.',

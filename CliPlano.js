@@ -201,6 +201,26 @@ function carregarPlanejamentoDocfinance() {
  */
 function darAcessoAoGestor(email, projectId) {
   var project = cliProjectId_(projectId);
-  setProjectMember(project, email, PROJECT_ROLES.VIEWER, true, cliMeta_(project, 'darAcessoAoGestor'));
-  return { ok: true, projectId: project, email: String(email || '').toLowerCase(), papel: 'VIEWER' };
+  var alvo = String(email || GESTOR_EMAIL || '').trim().toLowerCase();
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(alvo)) throw new Error('E-mail inválido: ' + alvo);
+
+  setProjectMember(project, alvo, PROJECT_ROLES.VIEWER, true, cliMeta_(project, 'darAcessoAoGestor'));
+
+  // Sem leitura da planilha ele receberia "sem permissão" na visão do gestor:
+  // a implantação roda como o usuário que acessa.
+  var planilhaOk = true;
+  var planilhaErro = '';
+  try {
+    SpreadsheetApp.getActive().addViewer(alvo);
+  } catch (error) {
+    planilhaOk = false;
+    planilhaErro = String(error && error.message ? error.message : error);
+  }
+
+  return {
+    ok: true, projectId: project, email: alvo, papel: 'VIEWER',
+    leituraDaPlanilha: planilhaOk,
+    aviso: planilhaOk ? '' :
+      'Conceda a leitura da planilha manualmente (Compartilhar → Leitor): ' + planilhaErro
+  };
 }

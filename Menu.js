@@ -9,6 +9,8 @@ function onOpen() {
     .addItem('Visão do gestor (somente leitura)', 'abrirVisaoGestor')
     .addItem('Meu dia — o que fazer e testar', 'mostrarResumoDoDia')
     .addSeparator()
+    .addItem('Enviar relatório ao gestor por e-mail', 'enviarRelatorioAoGestorUi')
+    .addSeparator()
     .addItem('Carregar planejamento Docfinance', 'carregarPlanejamentoDocfinanceUi')
     .addItem('Dar acesso de leitura ao gestor…', 'darAcessoAoGestorUi')
     .addSeparator()
@@ -74,6 +76,24 @@ function mostrarResumoDoDia() {
   bloco('O que testar hoje', resumo.oQueTestarHoje, function (t) { return t.id + ' · ' + t.teste; });
 
   ui.alert('Meu dia', linhas.join('\n'), ui.ButtonSet.OK);
+}
+
+function enviarRelatorioAoGestorUi() {
+  var ui = SpreadsheetApp.getUi();
+  var confirmacao = ui.alert('Enviar relatório ao gestor',
+    'Enviar agora o relatório de acompanhamento para ' + GESTOR_EMAIL + '?',
+    ui.ButtonSet.YES_NO);
+  if (confirmacao !== ui.Button.YES) return;
+  try {
+    var resultado = enviarRelatorioAoGestor(GESTOR_EMAIL);
+    ui.alert('Relatório enviado',
+      'Enviado para ' + resultado.destinatario + '.\n\n' +
+      'Assunto: ' + resultado.assunto,
+      ui.ButtonSet.OK);
+  } catch (error) {
+    ui.alert('Relatório ao gestor',
+      String(error && error.message ? error.message : error), ui.ButtonSet.OK);
+  }
 }
 
 function carregarPlanejamentoDocfinanceUi() {
