@@ -1,0 +1,2772 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+  :root {
+    color-scheme: light;
+    --header: #1F4E79;
+    --bg: #F4F5F7;
+    --card: #FFFFFF;
+    --text: #172B4D;
+    --muted: #6B778C;
+    --shadow: 0 1px 2px rgba(9,30,66,.25);
+    --surface: #FFFFFF;
+    --surface-subtle: #EBECF0;
+    --surface-sunken: #F4F5F7;
+    --surface-hover: #FAFBFC;
+    --input-bg: #FAFBFC;
+    --border: #DFE1E6;
+    --border-strong: #C1C7D0;
+    --primary: #0052CC;
+    --primary-focus: #4C9AFF;
+    --danger: #DE350B;
+    --success: #36B37E;
+    --warning-bg: #FFFAE6;
+    --warning-text: #7A5D00;
+    --warning-border: #FFE380;
+    --overlay: rgba(9,30,66,.55);
+    --loading-overlay: rgba(255,255,255,.6);
+    --badge-neutral-bg: #DFE1E6;
+    --badge-neutral-text: #42526E;
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --header: #12395E;
+    --bg: #0F172A;
+    --card: #18243A;
+    --text: #E5EDF7;
+    --muted: #9AA9BC;
+    --shadow: 0 1px 3px rgba(0,0,0,.6);
+    --surface: #111C2F;
+    --surface-subtle: #1B2940;
+    --surface-sunken: #0F172A;
+    --surface-hover: #22324B;
+    --input-bg: #0F1A2C;
+    --border: #33445D;
+    --border-strong: #52647C;
+    --primary: #579DFF;
+    --primary-focus: #85B8FF;
+    --danger: #F87168;
+    --success: #4BCE97;
+    --warning-bg: #3B3214;
+    --warning-text: #F8D66D;
+    --warning-border: #6B5720;
+    --overlay: rgba(0,0,0,.72);
+    --loading-overlay: rgba(5,10,20,.72);
+    --badge-neutral-bg: #3A4961;
+    --badge-neutral-text: #E5EDF7;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --header: #12395E; --bg: #0F172A; --card: #18243A; --text: #E5EDF7;
+      --muted: #9AA9BC; --shadow: 0 1px 3px rgba(0,0,0,.6); --surface: #111C2F;
+      --surface-subtle: #1B2940; --surface-sunken: #0F172A; --surface-hover: #22324B;
+      --input-bg: #0F1A2C; --border: #33445D; --border-strong: #52647C;
+      --primary: #579DFF; --primary-focus: #85B8FF; --danger: #F87168;
+      --success: #4BCE97; --warning-bg: #3B3214; --warning-text: #F8D66D;
+      --warning-border: #6B5720; --overlay: rgba(0,0,0,.72);
+      --loading-overlay: rgba(5,10,20,.72); --badge-neutral-bg: #3A4961;
+      --badge-neutral-text: #E5EDF7;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+    background: var(--bg); color: var(--text);
+    display: flex; flex-direction: column; overflow: hidden;
+  }
+
+  /* ---------- topo ---------- */
+  #topbar {
+    background: var(--header); color: #fff;
+    padding: 10px 16px; display: flex; align-items: center; gap: 12px;
+    flex-wrap: wrap; flex-shrink: 0;
+  }
+  #topbar h1 { font-size: 15px; font-weight: 700; letter-spacing: .3px; margin-right: auto; }
+  #topbar .sub { font-size: 11px; opacity: .75; width: 100%; }
+  #toolbar {
+    display: flex; align-items: center; gap: 10px; padding: 10px 16px;
+    background: var(--surface); border-bottom: 1px solid var(--border); flex-shrink: 0; flex-wrap: wrap;
+  }
+  #toolbar input, #toolbar select {
+    padding: 6px 10px; border: 1px solid var(--border-strong); border-radius: 4px;
+    font-size: 13px; background: var(--input-bg); color: var(--text);
+  }
+  #toolbar input[type=search] { width: 220px; }
+  #customPeriod { display: none; align-items: center; gap: 5px; }
+  #customPeriod.open { display: flex; }
+  #customPeriod input { width: 132px; }
+  .btn {
+    border: none; border-radius: 4px; padding: 7px 14px; font-size: 13px;
+    font-weight: 600; cursor: pointer; transition: filter .1s;
+  }
+  .btn:hover { filter: brightness(.94); }
+  .btn:focus-visible, #toolbar input:focus-visible, #toolbar select:focus-visible {
+    outline: 2px solid var(--primary-focus); outline-offset: 2px;
+  }
+  .btn:disabled { cursor: not-allowed; opacity: .5; filter: none; }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-ghost { background: var(--surface-subtle); color: var(--text); }
+  .btn-danger { background: var(--danger); color: #fff; }
+  #stats { margin-left: auto; font-size: 12px; color: var(--muted); }
+  #warning {
+    display: none; background: var(--warning-bg); color: var(--warning-text); border-bottom: 1px solid var(--warning-border);
+    padding: 7px 16px; font-size: 12px; flex-shrink: 0;
+  }
+  #warning.open { display: block; }
+  #filterEmpty {
+    display: none; flex-shrink: 0; margin: 10px 16px 0; padding: 10px 12px;
+    align-items: center; justify-content: center; gap: 10px; text-align: center;
+    border: 1px dashed var(--border-strong); border-radius: 7px;
+    background: var(--surface); color: var(--muted); font-size: 12px;
+  }
+  #filterEmpty.open { display: flex; }
+  #filterEmpty .btn { padding: 5px 10px; flex-shrink: 0; }
+
+  /* ---------- quadro ---------- */
+  #board {
+    display: flex; gap: 12px; padding: 14px 16px; flex: 1;
+    overflow-x: auto; overflow-y: hidden; align-items: stretch;
+  }
+  .col {
+    flex: 1 1 0; min-width: 230px; display: flex; flex-direction: column;
+    border-radius: 8px; background: var(--surface-subtle); max-height: 100%;
+  }
+  .col-head {
+    font-weight: 700; font-size: 12.5px; letter-spacing: .4px;
+    padding: 8px 12px 9px; border-radius: 8px 8px 0 0;
+    border-top: 4px solid transparent;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .col-head .count {
+    background: color-mix(in srgb, currentColor 12%, transparent); border-radius: 10px;
+    font-size: 11px; padding: 1px 9px; font-weight: 600;
+  }
+  .col-body {
+    padding: 8px; overflow-y: auto; flex: 1; display: flex;
+    flex-direction: column; gap: 8px; border-radius: 0 0 8px 8px;
+    transition: background .15s;
+  }
+  .col-body.dragover { outline: 2px dashed var(--primary); outline-offset: -4px; background: var(--surface-hover) !important; }
+  .col-empty {
+    min-height: 84px; padding: 22px 12px; display: grid; place-items: center;
+    border: 1px dashed var(--border-strong); border-radius: 6px;
+    color: var(--muted); font-size: 11.5px; text-align: center;
+  }
+  :root[data-theme="dark"] .col-body { background: var(--surface-sunken) !important; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .col-body { background: var(--surface-sunken) !important; } }
+
+  /* ---------- card ---------- */
+  .kcard {
+    background: var(--card); border-radius: 4px; box-shadow: var(--shadow);
+    padding: 9px 10px; cursor: grab; border-left: 4px solid transparent;
+    user-select: none;
+  }
+  .kcard:hover { background: var(--surface-hover); }
+  .kcard:focus-visible { outline: 3px solid var(--primary-focus); outline-offset: 2px; }
+  .kcard.dragging { opacity: .45; transform: rotate(2deg); }
+  .kcard.pending { cursor: progress; opacity: .68; }
+  .kcard.pending .pctwrap { display: none; }
+  .kcard[draggable="false"] { cursor: default; }
+  .kcard.blocked { border-top: 1px solid color-mix(in srgb, var(--danger) 55%, transparent); }
+  .kcard .row1 { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 5px; }
+  .kcard .id { font-family: 'Roboto Mono', Consolas, monospace; font-size: 11px; color: var(--muted); font-weight: 600; }
+  .badge {
+    font-size: 10.5px; font-weight: 700; border-radius: 3px; padding: 2px 7px; white-space: nowrap;
+  }
+  .kcard .title { font-size: 12.5px; line-height: 1.35; margin-bottom: 7px; }
+  .kcard .row3 { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .kcard .resp { font-size: 11px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .kcard .resp.na { font-style: italic; }
+  .avatar {
+    display: inline-flex; width: 18px; height: 18px; border-radius: 50%;
+    background: var(--header); color: #fff; font-size: 9.5px; font-weight: 700;
+    align-items: center; justify-content: center; margin-right: 5px; vertical-align: middle;
+  }
+  .pctwrap { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
+  .pctbar { width: 46px; height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; }
+  .pctbar > div { height: 100%; background: var(--success); }
+  .pcttxt { font-size: 10.5px; color: var(--muted); min-width: 28px; text-align: right; }
+  .due { font-size: 10.5px; color: var(--muted); margin-top: 6px; }
+  .due.overdue { color: var(--danger); font-weight: 700; }
+  .flow-tags { display: flex; flex-wrap: wrap; gap: 5px; margin: 5px 0; }
+  .flow-tag { font-size: 9.5px; font-weight: 700; border-radius: 3px; padding: 2px 6px; }
+  .flow-tag.blocked { background: color-mix(in srgb, var(--danger) 18%, var(--surface)); color: var(--danger); }
+  .flow-tag.uat { background: color-mix(in srgb, #008DA6 20%, var(--surface)); color: #008DA6; }
+  .priority-label { text-transform: uppercase; letter-spacing: .25px; }
+  .card-actions {
+    display: flex; justify-content: flex-end; gap: 5px; padding-top: 7px; margin-top: 7px;
+    border-top: 1px solid var(--border);
+  }
+  .card-move {
+    min-height: 28px; max-width: 48%; padding: 4px 7px; border: 1px solid var(--border);
+    border-radius: 4px; background: var(--surface-subtle); color: var(--text);
+    font: inherit; font-size: 10px; font-weight: 700; cursor: pointer;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .card-move:hover { background: var(--surface-hover); border-color: var(--border-strong); }
+  .card-move:focus-visible { outline: 2px solid var(--primary-focus); outline-offset: 1px; }
+  .pending-label { color: var(--primary); font-size: 10px; font-weight: 700; margin-left: auto; }
+  @media (hover: hover) and (pointer: fine) {
+    .card-actions { opacity: .35; transition: opacity .15s; }
+    .kcard:hover .card-actions, .kcard:focus-within .card-actions { opacity: 1; }
+  }
+  body.compact .kcard { padding: 6px 8px; }
+  body.compact .kcard .title { margin-bottom: 4px; }
+  body.compact .pctwrap, body.compact .due { display: none; }
+  body.compact .col-body { gap: 5px; padding: 6px; }
+
+  /* ---------- modal ---------- */
+  #overlay, #trashOverlay, #projectOverlay, #inboxOverlay, #queryOverlay, #automationOverlay {
+    position: fixed; inset: 0; background: var(--overlay);
+    display: none; align-items: flex-start; justify-content: center; z-index: 50;
+    overflow-y: auto; padding: 24px 12px;
+  }
+  #overlay.open, #trashOverlay.open, #projectOverlay.open, #inboxOverlay.open, #queryOverlay.open, #automationOverlay.open { display: flex; }
+  #modal, #trashModal, #projectModal, #inboxModal, #queryModal, #automationModal {
+    background: var(--surface); border-radius: 8px; width: 720px; max-width: 96vw;
+    box-shadow: 0 8px 28px rgba(9,30,66,.35); padding: 20px 22px;
+  }
+  #modal h2 { font-size: 16px; margin-bottom: 14px; display: flex; align-items: center; gap: 10px; }
+  #modal h2 .id { font-family: 'Roboto Mono', Consolas, monospace; font-size: 13px; color: var(--muted); }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; }
+  .field { display: flex; flex-direction: column; gap: 3px; }
+  .field.full { grid-column: 1 / -1; }
+  .field label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .3px; }
+  .field input, .field select, .field textarea {
+    border: 1px solid var(--border-strong); border-radius: 4px; padding: 7px 9px;
+    font-size: 13px; font-family: inherit; background: var(--input-bg); color: var(--text);
+  }
+  .field textarea { resize: vertical; min-height: 56px; line-height: 1.4; }
+  .field input:focus, .field select:focus, .field textarea:focus { outline: 2px solid var(--primary-focus); background: var(--surface); }
+  .field input.invalid, .field select.invalid, .field textarea.invalid { border-color: var(--danger); outline: 1px solid var(--danger); }
+  #formError {
+    display: none; margin: -4px 0 12px; padding: 9px 11px; border-radius: 5px;
+    border: 1px solid var(--danger); background: color-mix(in srgb, var(--danger) 10%, var(--surface));
+    color: var(--danger); font-size: 12px; line-height: 1.4;
+  }
+  #formError.open { display: block; }
+  .inline { display: flex; gap: 10px; align-items: center; }
+  #f_pct { flex: 1; }
+  #pctlabel { font-size: 13px; font-weight: 700; min-width: 42px; text-align: right; }
+  #score { font-size: 13px; font-weight: 700; }
+  .modal-actions { display: flex; gap: 10px; margin-top: 18px; justify-content: flex-end; }
+  .modal-actions .spacer { margin-right: auto; }
+  #draftStatus { margin-left: auto; font-size: 11px; font-weight: 500; color: var(--muted); }
+  .trash-list { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+  .trash-item {
+    border: 1px solid var(--border); border-radius: 5px; padding: 10px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .trash-item .trash-main { flex: 1; min-width: 0; }
+  .trash-item .trash-title { font-size: 13px; font-weight: 600; }
+  .trash-item .trash-meta { color: var(--muted); font-size: 11px; margin-top: 3px; }
+  .empty-state { color: var(--muted); font-size: 13px; padding: 22px 0; text-align: center; }
+  .workflow-panel { margin-top: 14px; border-top: 1px solid var(--border); padding-top: 12px; }
+  .workflow-panel h3 { font-size: 12px; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+  .workflow-card { background: var(--surface-sunken); border: 1px solid var(--border); border-radius: 6px; padding: 10px; margin-top: 8px; }
+  .workflow-card.blocker { border-left: 4px solid var(--danger); }
+  .workflow-card.uat { border-left: 4px solid #008DA6; }
+  .workflow-title { font-size: 12px; font-weight: 700; margin-bottom: 5px; }
+  .workflow-text { font-size: 12px; line-height: 1.45; white-space: pre-wrap; }
+  .workflow-meta { font-size: 10.5px; color: var(--muted); margin-top: 6px; }
+  .workflow-form { display: grid; gap: 7px; margin-top: 8px; }
+  .workflow-form textarea, .workflow-form input {
+    width: 100%; border: 1px solid var(--border-strong); border-radius: 4px;
+    padding: 7px 9px; font: inherit; font-size: 12px; background: var(--input-bg); color: var(--text);
+  }
+  .workflow-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .btn-success { background: var(--success); color: #082B20; }
+  .context-list { display: grid; gap: 6px; margin-top: 8px; }
+  .context-item { border-left: 2px solid var(--border-strong); padding-left: 8px; }
+  .context-item .body { font-size: 11.5px; line-height: 1.4; white-space: pre-wrap; }
+  .context-item .meta { color: var(--muted); font-size: 10px; margin-top: 2px; }
+  .inbox-list { display: grid; gap: 8px; margin-top: 14px; max-height: 380px; overflow-y: auto; }
+  .inbox-item { border: 1px solid var(--border); border-radius: 6px; padding: 10px; background: var(--surface-sunken); }
+  .inbox-item-head { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+  .inbox-item-head .id { font: 10px 'Roboto Mono', Consolas, monospace; color: var(--muted); }
+  .inbox-status { padding: 2px 6px; border-radius: 999px; background: var(--badge-neutral-bg); color: var(--badge-neutral-text); font-size: 9px; font-weight: 700; }
+  .inbox-item-body { white-space: pre-wrap; font-size: 12px; line-height: 1.4; overflow-wrap: anywhere; }
+  .inbox-item-meta { margin-top: 6px; color: var(--muted); font-size: 10px; }
+  .inbox-review { display: grid; grid-template-columns: 150px 1fr 145px; gap: 7px; margin-top: 9px; padding-top: 9px; border-top: 1px solid var(--border); }
+  .inbox-review select, .inbox-review input {
+    min-width: 0; border: 1px solid var(--border-strong); border-radius: 4px;
+    padding: 6px 8px; font: inherit; font-size: 11px; background: var(--input-bg); color: var(--text);
+  }
+  .inbox-item-actions { display: flex; flex-wrap: wrap; gap: 6px; grid-column: 1 / -1; }
+  .inbox-item-actions .btn { padding: 5px 9px; font-size: 10.5px; }
+  .inbox-review-state { grid-column: 1 / -1; min-height: 14px; color: var(--muted); font-size: 10px; }
+  .query-prompts { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+  .query-prompts button { font-size: 11px; }
+  .query-answer {
+    min-height: 84px; margin-top: 12px; padding: 12px; border-radius: 6px;
+    border: 1px solid var(--border); background: var(--surface-sunken);
+    font-size: 13px; line-height: 1.5; white-space: pre-wrap;
+  }
+  .query-answer.error { border-color: var(--danger); color: var(--danger); }
+  .query-meta { color: var(--muted); font-size: 10.5px; margin-top: 7px; }
+  .query-evidence { display: grid; gap: 7px; margin-top: 12px; max-height: 330px; overflow-y: auto; }
+  .query-evidence-item {
+    width: 100%; text-align: left; border: 1px solid var(--border); border-radius: 6px;
+    padding: 9px 10px; background: var(--surface); color: var(--text); font: inherit;
+  }
+  button.query-evidence-item { cursor: pointer; }
+  button.query-evidence-item:hover { background: var(--surface-hover); border-color: var(--border-strong); }
+  .query-evidence-title { font-size: 12px; font-weight: 700; }
+  .query-evidence-body { margin-top: 3px; color: var(--muted); font-size: 11px; line-height: 1.35; }
+  .query-kind { margin-right: 6px; color: var(--primary); font-size: 9px; letter-spacing: .3px; }
+  .health-summary { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+  .health-pill { padding: 5px 9px; border-radius: 999px; background: var(--surface-subtle); font-size: 11px; font-weight: 700; }
+  .health-pill.critical { background: color-mix(in srgb, var(--danger) 16%, var(--surface)); color: var(--danger); }
+  .health-pill.attention { background: var(--warning-bg); color: var(--warning-text); }
+  .health-pill.healthy { background: color-mix(in srgb, var(--success) 18%, var(--surface)); color: var(--success); }
+  .automation-list { display: grid; gap: 8px; margin-top: 12px; max-height: 310px; overflow-y: auto; }
+  .automation-signal { border: 1px solid var(--border); border-left: 4px solid var(--warning-border); border-radius: 6px; padding: 9px 10px; background: var(--surface-sunken); }
+  .automation-signal.high { border-left-color: var(--danger); }
+  .automation-signal-title { font-size: 12px; font-weight: 700; }
+  .automation-signal-detail { margin-top: 4px; color: var(--muted); font-size: 11px; line-height: 1.4; }
+  .automation-task-links { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 7px; }
+  .automation-task-links button { padding: 3px 7px; font-size: 10px; }
+  .automation-recommendations { margin: 10px 0 0 18px; color: var(--muted); font-size: 11px; line-height: 1.5; }
+
+  /* ---------- avisos ---------- */
+  #loading {
+    position: fixed; inset: 0; background: var(--loading-overlay);
+    display: none; align-items: center; justify-content: center; z-index: 100;
+  }
+  #loading.open { display: flex; }
+  .spinner {
+    width: 38px; height: 38px; border: 4px solid var(--border); border-top-color: var(--primary);
+    border-radius: 50%; animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+  }
+  #toast {
+    position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
+    background: #172B4D; color: #fff; padding: 10px 18px; border-radius: 5px;
+    font-size: 13px; display: none; z-index: 110; max-width: 80vw;
+  }
+  #toast.err { background: var(--danger); }
+  #toast.open { display: block; }
+
+  /* ---------- preferências ---------- */
+  .popover-wrap { position: relative; }
+  #viewPanel {
+    display: none; position: absolute; right: 0; top: calc(100% + 6px); z-index: 40;
+    width: 290px; max-height: min(520px, 70vh); overflow-y: auto; padding: 12px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 7px;
+    box-shadow: 0 8px 24px rgba(9,30,66,.28);
+  }
+  #viewPanel.open { display: block; }
+  #viewPanel h3 { font-size: 12px; margin: 2px 0 8px; text-transform: uppercase; color: var(--muted); }
+  .view-row { display: flex; align-items: center; gap: 7px; padding: 5px 0; }
+  .view-row label { flex: 1; min-width: 0; font-size: 12px; overflow: hidden; text-overflow: ellipsis; }
+  .icon-btn { border: 1px solid var(--border); background: var(--surface-subtle); color: var(--text); border-radius: 3px; padding: 2px 7px; cursor: pointer; }
+  .view-option { display: flex; align-items: center; gap: 8px; font-size: 12px; padding: 8px 0; border-top: 1px solid var(--border); }
+  .panel-actions { display: flex; justify-content: flex-end; margin-top: 8px; }
+
+  @media (max-width: 800px) {
+    body { overflow: auto; }
+    #topbar .sub { display: none; }
+    #toolbar { gap: 7px; padding: 8px; }
+    #toolbar input[type=search] { width: min(100%, 260px); flex: 1 1 180px; }
+    #stats { width: 100%; margin-left: 0; }
+    #board { min-height: 70vh; padding: 10px 8px; scroll-snap-type: x mandatory; scroll-padding-inline: 8px; }
+    .col { min-width: min(86vw, 320px); scroll-snap-align: start; scroll-snap-stop: always; }
+    .card-move { min-height: 40px; font-size: 11px; }
+    #filterEmpty { margin: 8px 8px 0; flex-direction: column; }
+    .grid { grid-template-columns: 1fr; }
+    .field.full { grid-column: 1; }
+    .inbox-review { grid-template-columns: 1fr; }
+    .inbox-item-actions, .inbox-review-state { grid-column: 1; }
+    #modal, #trashModal, #projectModal, #inboxModal, #queryModal, #automationModal { padding: 16px; }
+    #viewPanel { position: fixed; top: 64px; right: 8px; left: 8px; width: auto; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+  }
+</style>
+</head>
+<body>
+  <div id="topbar">
+    <h1 id="appTitle">QUADRO KANBAN — CONTROLE ÁGIL</h1>
+    <div class="sub">Ordenação: prioridade ↓, dificuldade ↑, ID ↑ · Pontuação = Prioridade × Dificuldade · Mover um card altera somente o Status</div>
+  </div>
+
+  <div id="toolbar">
+    <button class="btn btn-primary" onclick="openModal(null)">+ Nova tarefa</button>
+    <button class="btn btn-ghost" id="inboxButton" onclick="openInbox_()">Inbox</button>
+    <button class="btn btn-ghost" id="queryButton" onclick="openQuery_()">Consultar</button>
+    <button class="btn btn-ghost" id="automationButton" onclick="openAutomation_()">Saúde do fluxo</button>
+    <select id="projectSelect" onchange="onProjectChanged_()" aria-label="Projeto atual"></select>
+    <button class="btn btn-ghost" onclick="openProjectModal_()">+ Projeto</button>
+    <select id="filterResp" onchange="onPreferenceControlChanged_()" aria-label="Filtrar por responsável">
+      <option value="">Todos os responsáveis</option>
+    </select>
+    <select id="filterPriority" onchange="onPreferenceControlChanged_()" aria-label="Filtrar por prioridade">
+      <option value="">Todas as prioridades</option>
+      <option value="5">Prioridade 5</option><option value="4">Prioridade 4</option>
+      <option value="3">Prioridade 3</option><option value="2">Prioridade 2</option>
+      <option value="1">Prioridade 1</option><option value="__none__">Sem prioridade</option>
+    </select>
+    <select id="filterFlag" onchange="onPreferenceControlChanged_()" aria-label="Filtrar por condição">
+      <option value="">Todas as condições</option>
+      <option value="blocked">Bloqueadas</option>
+      <option value="unblocked">Não bloqueadas</option>
+      <option value="uat_pending">UAT pendente</option>
+    </select>
+    <select id="filterPeriod" onchange="onPeriodChanged_()" aria-label="Filtrar por prazo">
+      <option value="today">Prazo: hoje</option>
+      <option value="this_week">Prazo: esta semana</option>
+      <option value="next_week">Prazo: próxima semana</option>
+      <option value="this_month">Prazo: este mês</option>
+      <option value="previous_month">Prazo: mês anterior</option>
+      <option value="custom">Prazo: personalizado</option>
+      <option value="all">Todas as tarefas</option>
+      <option value="overdue">Tarefas atrasadas</option>
+      <option value="no_due">Tarefas sem prazo</option>
+    </select>
+    <span id="customPeriod">
+      <input id="filterDateFrom" type="date" onchange="onPreferenceControlChanged_()" aria-label="Prazo inicial">
+      <span>até</span>
+      <input id="filterDateTo" type="date" onchange="onPreferenceControlChanged_()" aria-label="Prazo final">
+    </span>
+    <input type="search" id="search" placeholder="Buscar por ID, título, descrição…" oninput="scheduleRender_()">
+    <button class="btn btn-ghost" onclick="load()">↻ Atualizar</button>
+    <button class="btn btn-ghost" onclick="openTrash()">Lixeira</button>
+    <select id="themeMode" onchange="onThemeChanged_()" aria-label="Tema">
+      <option value="system">Tema: sistema</option>
+      <option value="light">Tema: claro</option>
+      <option value="dark">Tema: escuro</option>
+    </select>
+    <div class="popover-wrap">
+      <button class="btn btn-ghost" id="viewButton" onclick="toggleViewPanel_(event)" aria-expanded="false">Visualização</button>
+      <div id="viewPanel" role="dialog" aria-label="Configurar visualização">
+        <h3>Colunas visíveis e ordem</h3>
+        <div id="statusPreferences"></div>
+        <label class="view-option"><input id="compactMode" type="checkbox" onchange="onCompactChanged_()"> Modo compacto</label>
+        <div class="panel-actions"><button class="btn btn-ghost" onclick="resetViewPreferences_()">Restaurar padrão</button></div>
+      </div>
+    </div>
+    <div id="stats"></div>
+  </div>
+
+  <div id="warning"></div>
+
+  <div id="filterEmpty" role="status" aria-live="polite"></div>
+
+  <div id="board" role="region" aria-label="Quadro Kanban"></div>
+
+  <div id="overlay">
+    <div id="modal" role="dialog" aria-modal="true" aria-labelledby="m_title">
+      <h2><span id="m_title">Nova tarefa</span><span class="id" id="m_id"></span><span id="draftStatus"></span></h2>
+      <div id="formError" role="alert" aria-live="assertive"></div>
+      <div class="grid">
+        <div class="field full">
+          <label for="f_tarefa">Tarefa *</label>
+          <input id="f_tarefa" maxlength="300" required autocomplete="off">
+        </div>
+        <div class="field full">
+          <label for="f_descricao">Descrição detalhada</label>
+          <textarea id="f_descricao"></textarea>
+        </div>
+        <div class="field full">
+          <label for="f_subtarefas">Subtarefas e critérios de aceite</label>
+          <textarea id="f_subtarefas" rows="4" placeholder="• item 1&#10;• item 2"></textarea>
+        </div>
+        <div class="field">
+          <label for="f_prioridade">Prioridade (1–5)</label>
+          <select id="f_prioridade" onchange="updScore()">
+            <option value="">—</option>
+            <option>5</option><option>4</option><option>3</option><option>2</option><option>1</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="f_dificuldade">Dificuldade</label>
+          <input id="f_dificuldade" type="number" min="1" step="1" onchange="updScore()" oninput="updScore()">
+        </div>
+        <div class="field">
+          <label for="score">Pontuação combinada</label>
+          <div id="score">—</div>
+        </div>
+        <div class="field">
+          <label for="f_status">Status *</label>
+          <select id="f_status" required></select>
+        </div>
+        <div class="field">
+          <label for="f_responsavel">Responsável</label>
+          <select id="f_responsavel"><option value="">Não atribuído</option></select>
+        </div>
+        <div class="field">
+          <label for="f_pct">Percentual concluído</label>
+          <div class="inline">
+            <input id="f_pct" type="range" min="0" max="100" step="5" value="0"
+                   oninput="document.getElementById('pctlabel').textContent=this.value+'%'">
+            <span id="pctlabel">0%</span>
+          </div>
+        </div>
+        <div class="field">
+          <label for="f_dataCriacao">Data de criação</label>
+          <input id="f_dataCriacao" type="date">
+        </div>
+        <div class="field">
+          <label for="f_dataInicio">Data de início</label>
+          <input id="f_dataInicio" type="date">
+        </div>
+        <div class="field">
+          <label for="f_dataConclusao">Data de conclusão</label>
+          <input id="f_dataConclusao" type="date">
+        </div>
+        <div class="field">
+          <label for="f_dueDate">Prazo</label>
+          <input id="f_dueDate" type="date">
+        </div>
+        <div class="field full">
+          <label for="f_dependencias">Dependências</label>
+          <textarea id="f_dependencias" rows="2"></textarea>
+        </div>
+        <div class="field full">
+          <label for="f_observacoes">Observações</label>
+          <textarea id="f_observacoes" rows="2"></textarea>
+        </div>
+      </div>
+      <div id="workflowPanel" class="workflow-panel">
+        <h3>Workflow</h3>
+        <div id="workflowContent"></div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-danger spacer" id="btnDelete" onclick="removeTask()">Excluir</button>
+        <button class="btn btn-ghost" onclick="cancelModal()">Cancelar</button>
+        <button class="btn btn-primary" id="btnSave" onclick="save()">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="trashOverlay">
+    <div id="trashModal">
+      <h2>Lixeira</h2>
+      <div id="trashList" class="trash-list"></div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeTrash()">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="projectOverlay">
+    <div id="projectModal">
+      <h2>Novo projeto</h2>
+      <div class="grid" style="margin-top:14px">
+        <div class="field">
+          <label for="p_projectId">ID / prefixo *</label>
+          <input id="p_projectId" minlength="2" maxlength="12" pattern="[A-Za-z][A-Za-z0-9_-]{1,11}" placeholder="Ex.: FIN" autocomplete="off">
+        </div>
+        <div class="field">
+          <label for="p_name">Nome *</label>
+          <input id="p_name" maxlength="120" placeholder="Projeto Financeiro" autocomplete="off">
+        </div>
+        <div class="field full">
+          <label for="p_description">Descrição</label>
+          <textarea id="p_description" rows="3"></textarea>
+        </div>
+      </div>
+      <div class="workflow-meta">O criador será OWNER. IDs de tarefas usarão este prefixo e não poderão ser renomeados.</div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeProjectModal_()">Cancelar</button>
+        <button class="btn btn-primary" onclick="submitProject_()">Criar projeto</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="inboxOverlay">
+    <div id="inboxModal" role="dialog" aria-modal="true" aria-labelledby="inboxTitle">
+      <h2 id="inboxTitle">Inbox do projeto</h2>
+      <div class="grid" style="margin-top:14px">
+        <div class="field">
+          <label for="i_captureType">Tipo de captura</label>
+          <select id="i_captureType" oninput="saveInboxDraft_()">
+            <option value="TEXT">Texto</option>
+            <option value="LINK">Link</option>
+            <option value="MEETING_NOTE">Nota de reunião</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="i_sourceUrl">Link de origem</label>
+          <input id="i_sourceUrl" maxlength="4000" placeholder="https://…" oninput="saveInboxDraft_()">
+        </div>
+        <div class="field full">
+          <label for="i_rawText">Texto, ideia ou anotação</label>
+          <textarea id="i_rawText" rows="4" maxlength="50000" placeholder="Capture agora; classifique depois." oninput="saveInboxDraft_()"></textarea>
+        </div>
+      </div>
+      <div class="workflow-meta" id="inboxDraftStatus">Itens entram como NEW. Nenhuma tarefa é criada automaticamente.</div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeInbox_()">Fechar</button>
+        <button class="btn btn-primary" onclick="captureInbox_()">Capturar</button>
+      </div>
+      <div id="inboxList" class="inbox-list"></div>
+    </div>
+  </div>
+
+  <div id="queryOverlay">
+    <div id="queryModal" role="dialog" aria-modal="true" aria-labelledby="queryTitle">
+      <h2 id="queryTitle">Consultar projeto</h2>
+      <div class="field full" style="margin-top:14px">
+        <label for="q_question">Pergunta ou termo de busca</label>
+        <textarea id="q_question" rows="3" maxlength="500" placeholder="Ex.: O que está bloqueando o projeto?"></textarea>
+      </div>
+      <div class="query-prompts" aria-label="Perguntas sugeridas">
+        <button class="btn btn-ghost" onclick="setProjectQuestion_('Qual é o status atual do projeto?')">Status atual</button>
+        <button class="btn btn-ghost" onclick="setProjectQuestion_('O que está bloqueando o projeto?')">Bloqueios</button>
+        <button class="btn btn-ghost" onclick="setProjectQuestion_('Quais tarefas estão em UAT?')">UAT</button>
+        <button class="btn btn-ghost" onclick="setProjectQuestion_('O que foi concluído esta semana?')">Concluídas na semana</button>
+        <button class="btn btn-ghost" onclick="setProjectQuestion_('Quais são os próximos passos para finalizar o projeto?')">Próximos passos</button>
+      </div>
+      <div id="queryAnswer" class="query-answer" role="status" aria-live="polite">Faça uma pergunta. A resposta será calculada a partir dos dados deste projeto.</div>
+      <div id="queryMeta" class="query-meta">Busca determinística; nenhuma ação será executada.</div>
+      <div id="queryEvidence" class="query-evidence"></div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeQuery_()">Fechar</button>
+        <button class="btn btn-primary" id="querySubmit" onclick="submitProjectQuestion_()">Consultar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="automationOverlay">
+    <div id="automationModal" role="dialog" aria-modal="true" aria-labelledby="automationTitle">
+      <h2 id="automationTitle">Saúde do fluxo</h2>
+      <div id="automationSummary" class="health-summary"></div>
+      <div class="grid">
+        <div class="field">
+          <label for="a_wipDev">Limite WIP — DEV (0 desativa)</label>
+          <input id="a_wipDev" type="number" min="0" max="999" step="1">
+        </div>
+        <div class="field">
+          <label for="a_wipMerge">Limite WIP — DEVMERGE</label>
+          <input id="a_wipMerge" type="number" min="0" max="999" step="1">
+        </div>
+        <div class="field">
+          <label for="a_wipUat">Limite WIP — UAT</label>
+          <input id="a_wipUat" type="number" min="0" max="999" step="1">
+        </div>
+        <div class="field">
+          <label for="a_staleDays">Tarefa parada após (dias)</label>
+          <input id="a_staleDays" type="number" min="1" max="365" step="1">
+        </div>
+        <div class="field">
+          <label for="a_blockerHours">SLA de bloqueio (horas)</label>
+          <input id="a_blockerHours" type="number" min="1" max="8760" step="1">
+        </div>
+        <div class="field">
+          <label for="a_uatHours">SLA de UAT (horas)</label>
+          <input id="a_uatHours" type="number" min="1" max="8760" step="1">
+        </div>
+      </div>
+      <div id="automationState" class="workflow-meta" role="status" aria-live="polite">Carregando regras e sinais…</div>
+      <ul id="automationRecommendations" class="automation-recommendations"></ul>
+      <div id="automationSignals" class="automation-list"></div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeAutomation_()">Fechar</button>
+        <button class="btn btn-ghost" id="automationRefresh" onclick="loadAutomationHealth_()">Recalcular</button>
+        <button class="btn btn-primary" id="automationSave" onclick="saveAutomationSettings_()">Salvar governança</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="loading" role="status" aria-live="polite" aria-label="Carregando" aria-hidden="true"><div class="spinner" aria-hidden="true"></div><span class="sr-only">Carregando…</span></div>
+  <div id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+
+<script>
+  var DATA = { tasks: [], statuses: [], responsaveis: [], priorityColors: {}, warnings: [], projectId: 'AG', projects: [] };
+  var editingId = null;
+  var editingTask = null;
+  var editingVersion = null;
+  var formBaseline = '';
+  var formDirty = false;
+  var draftTimer = null;
+  var pendingRequestMetadata = null;
+  var pendingWorkflowMetadata = {};
+  var pendingInboxMetadata = null;
+  var INBOX_DATA = { items: [], itemTypes: [], statuses: [] };
+  var pendingInboxActions = {};
+  var queryInFlight = false;
+  var queryProjectId = '';
+  var automationData = null;
+  var automationInFlight = false;
+  var pendingAutomationMetadata = null;
+  var automationProjectId = '';
+  var automationDirty = false;
+  var taskSaveInFlight = false;
+  var searchRenderTimer = null;
+  var tabId = makeId();
+  var DRAFT_SCHEMA_VERSION = 2;
+  var draftChannel = null;
+  var PREFERENCES_KEY_PREFIX = 'kanban:preferences:v2:';
+  var LAST_PROJECT_KEY = 'kanban:last-project:v1';
+  var DEFAULT_PREFERENCES = {
+    theme: 'system', assignee: '', priority: '', flag: '', period: 'this_week',
+    dateFrom: '', dateTo: '', visibleStatuses: [], statusOrder: [], compact: false
+  };
+  var hadStoredPreferences = false;
+  var preferencesInitialized = false;
+  var clientWarnings = [];
+  var currentProjectId = loadLastProject_();
+  var PREFS = loadPreferences_(currentProjectId);
+
+  try {
+    if ('BroadcastChannel' in window) {
+      draftChannel = new BroadcastChannel('kanban-drafts-v1');
+      draftChannel.onmessage = function (ev) {
+        if (!ev.data || ev.data.tabId === tabId || ev.data.key !== currentDraftKey_()) return;
+        toast('Este rascunho também foi atualizado em outra aba.', true);
+      };
+    }
+  } catch (ignored) {}
+
+  // ------------------------------------------------------------ servidor ----
+  function load() {
+    busy(true);
+    google.script.run
+      .withSuccessHandler(onData)
+      .withFailureHandler(fail)
+      .getBoardData(currentProjectId);
+  }
+
+  function onData(d) {
+    DATA = d;
+    if (currentProjectId !== d.projectId) {
+      currentProjectId = d.projectId;
+      storeLastProject_(currentProjectId);
+      preferencesInitialized = false;
+      clientWarnings = [];
+      PREFS = loadPreferences_(currentProjectId);
+    }
+    fillStatic();
+    document.getElementById('appTitle').textContent = 'QUADRO KANBAN — ' + String((d.project && d.project.name) || d.projectId || 'CONTROLE ÁGIL').toUpperCase();
+    renderProjectSelector_();
+    initializePreferences_();
+    busy(false);
+    renderWarnings();
+    render();
+  }
+
+  function renderWarnings() {
+    var el = document.getElementById('warning');
+    var warnings = (DATA.warnings || []).concat(clientWarnings);
+    el.textContent = warnings.join(' ');
+    el.classList.toggle('open', warnings.length > 0);
+  }
+
+  function fail(err) {
+    busy(false);
+    toast((err && err.message) ? err.message : String(err), true);
+  }
+
+  var staticFilled = false;
+  function fillStatic() {
+    if (staticFilled) return;
+    staticFilled = true;
+    var fs = document.getElementById('f_status');
+    DATA.statuses.forEach(function (s) {
+      var o = document.createElement('option');
+      o.value = s.name; o.textContent = s.name;
+      fs.appendChild(o);
+    });
+    var fr = document.getElementById('f_responsavel');
+    var ff = document.getElementById('filterResp');
+    DATA.responsaveis.forEach(function (r) {
+      var o1 = document.createElement('option');
+      o1.value = r; o1.textContent = r;
+      fr.appendChild(o1);
+      var o2 = document.createElement('option');
+      o2.value = r; o2.textContent = r;
+      ff.appendChild(o2);
+    });
+    var oNA = document.createElement('option');
+    oNA.value = '__na__'; oNA.textContent = 'Não atribuído';
+    ff.appendChild(oNA);
+    renderStatusPreferences_();
+  }
+
+  function loadLastProject_() {
+    try { return String(localStorage.getItem(LAST_PROJECT_KEY) || 'AG'); }
+    catch (ignored) { return 'AG'; }
+  }
+
+  function storeLastProject_(projectId) {
+    try { localStorage.setItem(LAST_PROJECT_KEY, projectId); } catch (ignored) {}
+  }
+
+  function renderProjectSelector_() {
+    var select = document.getElementById('projectSelect');
+    select.innerHTML = '';
+    (DATA.projects || []).forEach(function (project) {
+      var option = document.createElement('option');
+      option.value = project.id;
+      option.textContent = project.name + ' (' + project.id + ')';
+      select.appendChild(option);
+    });
+    select.value = DATA.projectId;
+  }
+
+  function onProjectChanged_() {
+    var projectId = getVal('projectSelect');
+    if (!projectId || projectId === currentProjectId) return;
+    currentProjectId = projectId;
+    storeLastProject_(projectId);
+    preferencesInitialized = false;
+    clientWarnings = [];
+    PREFS = loadPreferences_(projectId);
+    load();
+  }
+
+  function openProjectModal_() {
+    setVal('p_projectId', ''); setVal('p_name', ''); setVal('p_description', '');
+    document.getElementById('projectOverlay').classList.add('open');
+    document.getElementById('p_projectId').focus();
+  }
+
+  function closeProjectModal_() { document.getElementById('projectOverlay').classList.remove('open'); }
+
+  function submitProject_() {
+    var projectId = getVal('p_projectId').trim().toUpperCase();
+    var name = getVal('p_name').trim();
+    if (!projectId || !name) { toast('Informe o ID e o nome do projeto.', true); return; }
+    if (!/^[A-Z][A-Z0-9_-]{1,11}$/.test(projectId)) {
+      document.getElementById('p_projectId').focus();
+      toast('O ID deve começar com letra e conter de 2 a 12 caracteres: A-Z, 0-9, _ ou -.', true);
+      return;
+    }
+    if (!ensureOnline_()) return;
+    busy(true);
+    google.script.run.withSuccessHandler(function (data) {
+      closeProjectModal_();
+      onData(data);
+      toast('Projeto ' + data.projectId + ' criado.');
+    }).withFailureHandler(fail).createProject({
+      projectId: projectId, name: name, description: getVal('p_description')
+    }, clientMetadata_());
+  }
+
+  // --------------------------------------------------------------- inbox ----
+
+  function inboxDraftKey_() { return 'kanban:inbox-draft:v1:' + currentProjectId; }
+
+  function openInbox_() {
+    document.getElementById('inboxTitle').textContent = 'Inbox — ' +
+      String((DATA.project && DATA.project.name) || currentProjectId);
+    document.getElementById('inboxOverlay').classList.add('open');
+    pendingInboxMetadata = null;
+    restoreInboxDraft_();
+    document.getElementById('inboxList').innerHTML = '<div class="empty-state">Carregando itens…</div>';
+    busy(true);
+    google.script.run.withSuccessHandler(function (data) {
+      busy(false);
+      renderInbox_(data);
+      document.getElementById('i_rawText').focus();
+    }).withFailureHandler(function (err) {
+      busy(false);
+      var message = (err && err.message) ? err.message : String(err);
+      document.getElementById('inboxList').innerHTML = '<div class="empty-state">' + esc(message) + '</div>';
+      toast(message, true);
+    }).getInboxData(currentProjectId, 'ALL');
+  }
+
+  function closeInbox_() {
+    saveInboxDraft_();
+    document.getElementById('inboxOverlay').classList.remove('open');
+  }
+
+  function captureInbox_() {
+    var rawText = getVal('i_rawText').trim();
+    var sourceUrl = getVal('i_sourceUrl').trim();
+    if (!rawText && !sourceUrl) {
+      toast('Informe um texto ou link para capturar.', true);
+      document.getElementById('i_rawText').focus();
+      return;
+    }
+    if (!ensureOnline_()) return;
+    pendingInboxMetadata = pendingInboxMetadata || clientMetadata_();
+    saveInboxDraft_();
+    busy(true);
+    google.script.run.withSuccessHandler(function (data) {
+      busy(false);
+      pendingInboxMetadata = null;
+      setVal('i_rawText', ''); setVal('i_sourceUrl', ''); setVal('i_captureType', 'TEXT');
+      clearInboxDraft_();
+      renderInbox_(data);
+      document.getElementById('i_rawText').focus();
+      toast('Item capturado na Inbox.');
+    }).withFailureHandler(function (err) {
+      busy(false);
+      saveInboxDraft_();
+      toast((err && err.message) ? err.message : String(err), true);
+    }).captureInboxItem({
+      projectId: currentProjectId,
+      captureType: getVal('i_captureType'),
+      rawText: rawText,
+      sourceUrl: sourceUrl
+    }, pendingInboxMetadata);
+  }
+
+  function renderInbox_(data) {
+    INBOX_DATA = data || { items: [], itemTypes: [], statuses: [] };
+    var allItems = data && data.items || [];
+    var items = allItems.slice(0, 50);
+    var root = document.getElementById('inboxList');
+    var pendingCount = allItems.filter(function (item) {
+      return ['CONVERTED', 'ARCHIVED'].indexOf(item.status) === -1;
+    }).length;
+    document.getElementById('inboxButton').textContent = pendingCount ? 'Inbox (' + pendingCount + ')' : 'Inbox';
+    if (!items.length) {
+      root.innerHTML = '<div class="empty-state">Nenhum item capturado neste projeto.</div>';
+      return;
+    }
+    root.innerHTML = items.map(function (item, index) {
+      var draft = inboxReviewDraft_(item);
+      var review = draft && draft.values || {};
+      var title = item.suggestedTitle ? '<div class="workflow-title">' + esc(item.suggestedTitle) + '</div>' : '';
+      var sourceHref = safeHref_(item.sourceUrl);
+      var source = sourceHref
+        ? '<div class="inbox-item-meta"><a href="' + esc(sourceHref) + '" target="_blank" rel="noopener noreferrer">Abrir link de origem</a></div>'
+        : (item.sourceUrl ? '<div class="inbox-item-meta">Origem: ' + esc(item.sourceUrl) + '</div>' : '');
+      var attachmentCount = (item.attachments || []).length;
+      var reviewHtml = '';
+      if (['CONVERTED', 'ARCHIVED'].indexOf(item.status) === -1) {
+        var selectedType = review.itemType == null ? item.suggestedType : review.itemType;
+        var selectedTitle = review.title == null ? item.suggestedTitle : review.title;
+        var selectedDue = review.dueDate == null ? item.suggestedDueDate : review.dueDate;
+        var actionable = ['TASK', 'BUG', 'FEATURE', 'BLOCKER'].indexOf(item.suggestedType) !== -1;
+        reviewHtml = '<div class="inbox-review">' +
+          '<select id="ir_type_' + index + '" aria-label="Tipo do item" oninput="saveInboxReviewDraft_(' + index + ')">' +
+          inboxTypeOptions_(data.itemTypes || [], selectedType) + '</select>' +
+          '<input id="ir_title_' + index + '" maxlength="300" placeholder="Título revisado" value="' + esc(selectedTitle || '') + '" oninput="saveInboxReviewDraft_(' + index + ')">' +
+          '<input id="ir_due_' + index + '" type="date" value="' + esc(selectedDue || '') + '" oninput="saveInboxReviewDraft_(' + index + ')">' +
+          '<div class="inbox-item-actions">' +
+          '<button class="btn btn-ghost" onclick="classifyInboxFromUi_(' + index + ',\'NEEDS_REVIEW\')">Salvar revisão</button>' +
+          '<button class="btn btn-primary" onclick="classifyInboxFromUi_(' + index + ',\'READY\')">Marcar READY</button>' +
+          (item.status === 'READY' && actionable
+            ? '<button class="btn btn-success" onclick="convertInboxFromUi_(' + index + ')">Criar tarefa</button>' : '') +
+          '<button class="btn btn-danger" onclick="archiveInboxFromUi_(' + index + ')">Arquivar</button>' +
+          '</div><div id="ir_state_' + index + '" class="inbox-review-state">' +
+          (draft ? 'Rascunho de revisão restaurado.' : 'Revise tipo e título; somente READY pode virar tarefa.') +
+          '</div></div>';
+      } else if (item.status === 'CONVERTED' && item.convertedTaskId) {
+        reviewHtml = '<div class="inbox-item-actions" style="margin-top:8px">' +
+          '<button class="btn btn-ghost" onclick="openConvertedInboxTask_(' + index + ')">Abrir ' +
+          esc(item.convertedTaskId) + '</button></div>';
+      }
+      return '<div class="inbox-item">' +
+        '<div class="inbox-item-head"><span class="inbox-status">' + esc(item.status) + '</span>' +
+        '<span class="inbox-status">' + esc(item.captureType) + '</span>' +
+        (item.suggestedType ? '<span class="inbox-status">' + esc(item.suggestedType) + '</span>' : '') +
+        '<span class="id">' + esc(item.id) + '</span></div>' + title +
+        (item.rawText ? '<div class="inbox-item-body">' + esc(item.rawText) + '</div>' : '') + source +
+        '<div class="inbox-item-meta">' + esc(formatDateTime_(item.capturedAt)) +
+        (item.capturedBy ? ' · ' + esc(item.capturedBy) : '') +
+        (attachmentCount ? ' · ' + attachmentCount + ' anexo(s)' : '') + '</div>' + reviewHtml + '</div>';
+    }).join('');
+  }
+
+  function inboxTypeOptions_(types, selected) {
+    var options = ['<option value="">Selecione o tipo</option>'];
+    (types || []).forEach(function (type) {
+      options.push('<option value="' + esc(type) + '"' + (type === selected ? ' selected' : '') + '>' + esc(type) + '</option>');
+    });
+    return options.join('');
+  }
+
+  function inboxReviewDraftKey_(itemId) {
+    return 'kanban:inbox-review-draft:v1:' + currentProjectId + ':' + itemId;
+  }
+
+  function inboxReviewDraft_(item) {
+    var draft = null;
+    try { draft = JSON.parse(localStorage.getItem(inboxReviewDraftKey_(item.id)) || 'null'); } catch (ignored) {}
+    if (!draft) return null;
+    if (Number(draft.version) !== Number(item.version)) {
+      clearInboxReviewDraft_(item.id);
+      return null;
+    }
+    Object.keys(draft.pendingActions || {}).forEach(function (action) {
+      pendingInboxActions[item.id + ':' + action] = draft.pendingActions[action];
+    });
+    return draft;
+  }
+
+  function inboxReviewValues_(index) {
+    return {
+      itemType: getVal('ir_type_' + index),
+      title: getVal('ir_title_' + index),
+      dueDate: getVal('ir_due_' + index)
+    };
+  }
+
+  function saveInboxReviewDraft_(index) {
+    var item = INBOX_DATA.items[index];
+    if (!item) return;
+    var actions = {};
+    Object.keys(pendingInboxActions).forEach(function (key) {
+      if (key.indexOf(item.id + ':') !== 0) return;
+      actions[key.slice(item.id.length + 1)] = pendingInboxActions[key];
+    });
+    try {
+      localStorage.setItem(inboxReviewDraftKey_(item.id), JSON.stringify({
+        version: item.version, values: inboxReviewValues_(index), pendingActions: actions,
+        updatedAt: new Date().toISOString()
+      }));
+      var state = document.getElementById('ir_state_' + index);
+      if (state) state.textContent = 'Rascunho da revisão salvo neste dispositivo.';
+    } catch (ignored) {}
+  }
+
+  function clearInboxReviewDraft_(itemId) {
+    try { localStorage.removeItem(inboxReviewDraftKey_(itemId)); } catch (ignored) {}
+    Object.keys(pendingInboxActions).forEach(function (key) {
+      if (key.indexOf(itemId + ':') === 0) delete pendingInboxActions[key];
+    });
+  }
+
+  function inboxActionMetadata_(item, action, index) {
+    var key = item.id + ':' + action;
+    if (!pendingInboxActions[key]) pendingInboxActions[key] = clientMetadata_();
+    saveInboxReviewDraft_(index);
+    return pendingInboxActions[key];
+  }
+
+  function classifyInboxFromUi_(index, status) {
+    var item = INBOX_DATA.items[index];
+    if (!item) return;
+    var values = inboxReviewValues_(index);
+    if (status === 'READY' && (!values.itemType || !values.title.trim())) {
+      toast('READY exige tipo e título revisados.', true);
+      document.getElementById(!values.itemType ? 'ir_type_' + index : 'ir_title_' + index).focus();
+      return;
+    }
+    if (!inboxOnline_()) return;
+    var metadata = inboxActionMetadata_(item, 'classify', index);
+    busy(true);
+    google.script.run.withSuccessHandler(function (data) {
+      busy(false);
+      clearInboxReviewDraft_(item.id);
+      renderInbox_(data);
+      toast(status === 'READY' ? 'Item pronto para conversão.' : 'Revisão salva.');
+    }).withFailureHandler(function (err) {
+      busy(false); saveInboxReviewDraft_(index);
+      toast((err && err.message) ? err.message : String(err), true);
+    }).classifyInboxItem(item.id, item.version, {
+      status: status, itemType: values.itemType, title: values.title.trim(), dueDate: values.dueDate
+    }, metadata);
+  }
+
+  function archiveInboxFromUi_(index) {
+    var item = INBOX_DATA.items[index];
+    if (!item || !confirm('Arquivar este item da Inbox? O histórico será preservado.')) return;
+    if (!inboxOnline_()) return;
+    var metadata = inboxActionMetadata_(item, 'archive', index);
+    busy(true);
+    google.script.run.withSuccessHandler(function (data) {
+      busy(false); clearInboxReviewDraft_(item.id); renderInbox_(data); toast('Item arquivado.');
+    }).withFailureHandler(function (err) {
+      busy(false); saveInboxReviewDraft_(index);
+      toast((err && err.message) ? err.message : String(err), true);
+    }).archiveInboxItem(item.id, item.version, metadata);
+  }
+
+  function convertInboxFromUi_(index) {
+    var item = INBOX_DATA.items[index];
+    if (!item || item.status !== 'READY') return;
+    var values = inboxReviewValues_(index);
+    if (values.itemType !== item.suggestedType || values.title.trim() !== item.suggestedTitle ||
+        values.dueDate !== (item.suggestedDueDate || '')) {
+      saveInboxReviewDraft_(index);
+      toast('Salve novamente como READY antes de criar a tarefa.', true);
+      return;
+    }
+    if (!confirm('Criar uma tarefa em BACKLOG a partir deste item revisado?')) return;
+    if (!inboxOnline_()) return;
+    var metadata = inboxActionMetadata_(item, 'convert', index);
+    busy(true);
+    google.script.run.withSuccessHandler(function (result) {
+      clearInboxReviewDraft_(item.id);
+      onData(result.board);
+      renderInbox_(result.inbox);
+      toast('Tarefa ' + result.taskId + ' criada a partir da Inbox.');
+    }).withFailureHandler(function (err) {
+      busy(false); saveInboxReviewDraft_(index);
+      toast((err && err.message) ? err.message : String(err), true);
+    }).convertInboxItemToTask(item.id, item.version, { status: 'BACKLOG' }, metadata);
+  }
+
+  function openConvertedInboxTask_(index) {
+    var inboxItem = INBOX_DATA.items[index];
+    var taskId = inboxItem && inboxItem.convertedTaskId;
+    if (!taskId) return;
+    var task = DATA.tasks.find(function (item) { return item.id === taskId; });
+    if (!task) { toast('Atualize o quadro para abrir a tarefa ' + taskId + '.', true); return; }
+    closeInbox_();
+    openModal(task);
+  }
+
+  function inboxOnline_() {
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+      toast('Sem conexão. O rascunho da Inbox foi preservado.', true);
+      return false;
+    }
+    return true;
+  }
+
+  function saveInboxDraft_() {
+    var raw = getVal('i_rawText');
+    var sourceUrl = getVal('i_sourceUrl');
+    if (!raw && !sourceUrl && !pendingInboxMetadata) { clearInboxDraft_(); return; }
+    try {
+      localStorage.setItem(inboxDraftKey_(), JSON.stringify({
+        captureType: getVal('i_captureType'), rawText: raw, sourceUrl: sourceUrl,
+        requestMetadata: pendingInboxMetadata, updatedAt: new Date().toISOString()
+      }));
+      document.getElementById('inboxDraftStatus').textContent =
+        'Rascunho da captura salvo neste dispositivo. Itens enviados entram como NEW.';
+    } catch (ignored) {}
+  }
+
+  function restoreInboxDraft_() {
+    var draft = null;
+    try { draft = JSON.parse(localStorage.getItem(inboxDraftKey_()) || 'null'); } catch (ignored) {}
+    if (!draft) return;
+    setVal('i_captureType', draft.captureType || 'TEXT');
+    setVal('i_rawText', draft.rawText || '');
+    setVal('i_sourceUrl', draft.sourceUrl || '');
+    pendingInboxMetadata = draft.requestMetadata || null;
+    document.getElementById('inboxDraftStatus').textContent = 'Rascunho de captura restaurado.';
+  }
+
+  function clearInboxDraft_() {
+    try { localStorage.removeItem(inboxDraftKey_()); } catch (ignored) {}
+    document.getElementById('inboxDraftStatus').textContent =
+      'Itens entram como NEW. Nenhuma tarefa é criada automaticamente.';
+  }
+
+  // ------------------------------------------------------------ consulta ----
+
+  function openQuery_() {
+    document.getElementById('queryTitle').textContent = 'Consultar — ' +
+      String((DATA.project && DATA.project.name) || currentProjectId);
+    if (queryProjectId !== currentProjectId) {
+      queryProjectId = currentProjectId;
+      setVal('q_question', '');
+      renderProjectAnswer_(null);
+    }
+    document.getElementById('queryOverlay').classList.add('open');
+    document.getElementById('q_question').focus();
+  }
+
+  function closeQuery_() {
+    if (queryInFlight) return;
+    document.getElementById('queryOverlay').classList.remove('open');
+  }
+
+  function setProjectQuestion_(question) {
+    setVal('q_question', question);
+    document.getElementById('q_question').focus();
+  }
+
+  function submitProjectQuestion_() {
+    if (queryInFlight) return;
+    var question = getVal('q_question').trim();
+    if (!question) {
+      renderQueryError_('Escreva uma pergunta ou termo de busca.');
+      document.getElementById('q_question').focus();
+      return;
+    }
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+      renderQueryError_('Sem conexão. A consulta precisa acessar os dados atuais do projeto.');
+      return;
+    }
+    queryInFlight = true;
+    document.getElementById('querySubmit').disabled = true;
+    document.getElementById('queryAnswer').className = 'query-answer';
+    document.getElementById('queryAnswer').textContent = 'Consultando dados autorizados do projeto…';
+    document.getElementById('queryMeta').textContent = '';
+    document.getElementById('queryEvidence').innerHTML = '';
+    google.script.run.withSuccessHandler(function (data) {
+      queryInFlight = false;
+      document.getElementById('querySubmit').disabled = false;
+      if (queryProjectId !== currentProjectId || data.projectId !== currentProjectId) return;
+      renderProjectAnswer_(data);
+    }).withFailureHandler(function (err) {
+      queryInFlight = false;
+      document.getElementById('querySubmit').disabled = false;
+      renderQueryError_((err && err.message) ? err.message : String(err));
+    }).askProject(currentProjectId, question, { limit: 20 });
+  }
+
+  function renderProjectAnswer_(data) {
+    var answer = document.getElementById('queryAnswer');
+    var meta = document.getElementById('queryMeta');
+    var evidenceRoot = document.getElementById('queryEvidence');
+    answer.className = 'query-answer';
+    if (!data) {
+      answer.textContent = 'Faça uma pergunta. A resposta será calculada a partir dos dados deste projeto.';
+      meta.textContent = 'Busca determinística; nenhuma ação será executada.';
+      evidenceRoot.innerHTML = '';
+      return;
+    }
+    answer.textContent = data.answer || 'Nenhuma resposta disponível.';
+    meta.textContent = 'Modo: ' + (data.mode || 'determinístico') + ' · Intenção: ' +
+      (data.intent || 'busca') + ' · ' + (data.limitations || '');
+    var evidence = data.evidence || [];
+    evidenceRoot.innerHTML = evidence.map(function (item) {
+      var body = item.detail || item.snippet || '';
+      var taskId = item.taskId && DATA.tasks.some(function (task) { return task.id === item.taskId; })
+        ? item.taskId : '';
+      var tag = taskId ? 'button' : 'div';
+      return '<' + tag + ' class="query-evidence-item"' +
+        (taskId ? ' type="button" data-task-id="' + esc(taskId) + '"' : '') + '>' +
+        '<div class="query-evidence-title"><span class="query-kind">' + esc(item.kind || 'DADO') + '</span>' +
+        esc(item.title || item.id || 'Evidência') + '</div>' +
+        (body ? '<div class="query-evidence-body">' + esc(body) + '</div>' : '') +
+        '<div class="query-evidence-body">' + esc([item.status, item.assignee, item.date].filter(Boolean).join(' · ')) + '</div>' +
+        '</' + tag + '>';
+    }).join('');
+    evidenceRoot.querySelectorAll('[data-task-id]').forEach(function (element) {
+      element.addEventListener('click', function () { openQueryEvidenceTask_(element.getAttribute('data-task-id')); });
+    });
+  }
+
+  function renderQueryError_(message) {
+    document.getElementById('queryAnswer').className = 'query-answer error';
+    document.getElementById('queryAnswer').textContent = message;
+    document.getElementById('queryMeta').textContent = 'A consulta não alterou nenhum dado.';
+    document.getElementById('queryEvidence').innerHTML = '';
+  }
+
+  function openQueryEvidenceTask_(taskId) {
+    var task = DATA.tasks.find(function (item) { return item.id === taskId; });
+    if (!task || queryInFlight) return;
+    closeQuery_();
+    openModal(task);
+  }
+
+  // ---------------------------------------------------------- automação ----
+
+  function openAutomation_() {
+    automationProjectId = currentProjectId;
+    automationData = null;
+    pendingAutomationMetadata = null;
+    automationDirty = false;
+    document.getElementById('automationTitle').textContent = 'Saúde do fluxo — ' +
+      String((DATA.project && DATA.project.name) || currentProjectId);
+    document.getElementById('automationOverlay').classList.add('open');
+    document.getElementById('automationSummary').innerHTML = '';
+    document.getElementById('automationSignals').innerHTML = '';
+    document.getElementById('automationRecommendations').innerHTML = '';
+    document.getElementById('automationState').textContent = 'Carregando regras e sinais…';
+    loadAutomationHealth_();
+  }
+
+  function closeAutomation_() {
+    if (automationInFlight) return;
+    if (automationDirty && !confirm('Fechar a governança do fluxo? O rascunho ficará salvo neste dispositivo.')) return;
+    saveAutomationDraft_();
+    automationDirty = false;
+    document.getElementById('automationOverlay').classList.remove('open');
+  }
+
+  function loadAutomationHealth_() {
+    if (automationInFlight) return;
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+      setAutomationState_('Sem conexão. A análise exige os dados atuais do projeto.', true);
+      return;
+    }
+    setAutomationBusy_(true);
+    setAutomationState_('Calculando WIP, SLAs, atrasos e inatividade…', false);
+    var requestedProjectId = automationProjectId || currentProjectId;
+    google.script.run.withSuccessHandler(function (data) {
+      setAutomationBusy_(false);
+      if (requestedProjectId !== currentProjectId || data.projectId !== requestedProjectId) return;
+      renderAutomationHealth_(data, true);
+    }).withFailureHandler(function (err) {
+      setAutomationBusy_(false);
+      setAutomationState_((err && err.message) ? err.message : String(err), true);
+    }).getProjectAutomationHealth(requestedProjectId, { limit: 50 });
+  }
+
+  function renderAutomationHealth_(data, fillForm) {
+    automationData = data;
+    var restoredDraft = false;
+    var summary = data.summary || {};
+    var stateClass = String(summary.state || '').toLowerCase();
+    document.getElementById('automationSummary').innerHTML =
+      '<span class="health-pill ' + esc(stateClass) + '">' + esc(summary.state || '—') + '</span>' +
+      '<span class="health-pill">' + esc(String(summary.activeTasks || 0)) + ' abertas</span>' +
+      '<span class="health-pill">' + esc(String(summary.blockedTasks || 0)) + ' bloqueadas</span>' +
+      '<span class="health-pill">' + esc(String(summary.totalSignals || 0)) + ' sinais</span>';
+    if (fillForm) {
+      var settings = data.settings || {};
+      var wip = settings.wipLimits || {};
+      setVal('a_wipDev', wip.DEV == null ? 0 : wip.DEV);
+      setVal('a_wipMerge', wip.DEVMERGE == null ? 0 : wip.DEVMERGE);
+      setVal('a_wipUat', wip.UAT == null ? 0 : wip.UAT);
+      setVal('a_staleDays', settings.staleAfterDays || 7);
+      setVal('a_blockerHours', settings.blockerSlaHours || 48);
+      setVal('a_uatHours', settings.uatSlaHours || 72);
+      automationDirty = false;
+      restoredDraft = restoreAutomationDraft_();
+    }
+    if (!restoredDraft) {
+      setAutomationState_('Política consultiva: os alertas não executam ações automaticamente. ' +
+        'Somente MANAGER ou OWNER pode salvar estas regras.', false);
+    }
+    document.getElementById('automationRecommendations').innerHTML = (data.recommendations || []).map(function (item) {
+      return '<li>' + esc(item) + '</li>';
+    }).join('');
+    var signals = data.signals || [];
+    var root = document.getElementById('automationSignals');
+    if (!signals.length) {
+      root.innerHTML = '<div class="empty-state">Nenhum sinal acionado pelas regras atuais.</div>';
+      return;
+    }
+    root.innerHTML = signals.map(function (signal, signalIndex) {
+      var evidence = signal.evidence || [];
+      return '<div class="automation-signal ' + esc(String(signal.severity || '').toLowerCase()) + '">' +
+        '<div class="automation-signal-title">' + esc(signal.severity) + ' · ' + esc(signal.title) + '</div>' +
+        '<div class="automation-signal-detail">' + esc(signal.detail) + '</div>' +
+        '<div class="automation-task-links">' + evidence.map(function (item, evidenceIndex) {
+          return '<button class="btn btn-ghost" type="button" data-automation-signal="' + signalIndex +
+            '" data-automation-evidence="' + evidenceIndex + '">' + esc(item.taskId || item.id) + '</button>';
+        }).join('') + '</div></div>';
+    }).join('');
+    root.querySelectorAll('[data-automation-signal]').forEach(function (element) {
+      element.addEventListener('click', function () {
+        var signal = signals[Number(element.getAttribute('data-automation-signal'))];
+        var item = signal && signal.evidence[Number(element.getAttribute('data-automation-evidence'))];
+        if (item) openAutomationEvidenceTask_(item.taskId || item.id);
+      });
+    });
+  }
+
+  function saveAutomationSettings_() {
+    if (automationInFlight || !automationData || automationData.projectId !== currentProjectId) return;
+    var settings;
+    try {
+      settings = {
+        expectedVersion: automationData.settings.version,
+        wipLimits: {
+          DEV: automationFormInteger_('a_wipDev', 'Limite WIP de DEV', 0, 999),
+          DEVMERGE: automationFormInteger_('a_wipMerge', 'Limite WIP de DEVMERGE', 0, 999),
+          UAT: automationFormInteger_('a_wipUat', 'Limite WIP de UAT', 0, 999)
+        },
+        staleAfterDays: automationFormInteger_('a_staleDays', 'Dias para tarefa parada', 1, 365),
+        blockerSlaHours: automationFormInteger_('a_blockerHours', 'SLA de bloqueio', 1, 8760),
+        uatSlaHours: automationFormInteger_('a_uatHours', 'SLA de UAT', 1, 8760)
+      };
+    } catch (error) {
+      setAutomationState_(error.message || String(error), true);
+      return;
+    }
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+      setAutomationState_('Sem conexão. As configurações não foram enviadas.', true);
+      return;
+    }
+    pendingAutomationMetadata = pendingAutomationMetadata || clientMetadata_();
+    saveAutomationDraft_();
+    setAutomationBusy_(true);
+    setAutomationState_('Salvando governança com controle de versão…', false);
+    google.script.run.withSuccessHandler(function (data) {
+      pendingAutomationMetadata = null;
+      automationDirty = false;
+      clearAutomationDraft_();
+      setAutomationBusy_(false);
+      if (data.projectId !== currentProjectId) return;
+      DATA.project = data.project;
+      DATA.projects = (DATA.projects || []).map(function (project) {
+        return project.id === data.project.id ? data.project : project;
+      });
+      renderAutomationHealth_(data, true);
+      toast('Governança do fluxo atualizada.');
+    }).withFailureHandler(function (err) {
+      setAutomationBusy_(false);
+      setAutomationState_((err && err.message) ? err.message : String(err), true);
+    }).saveProjectAutomationSettings(currentProjectId, settings, pendingAutomationMetadata);
+  }
+
+  function automationFormInteger_(id, label, minimum, maximum) {
+    var field = document.getElementById(id);
+    var value = Number(field.value);
+    if (!isFinite(value) || Math.floor(value) !== value || value < minimum || value > maximum) {
+      field.focus();
+      throw new Error(label + ' deve ser um inteiro entre ' + minimum + ' e ' + maximum + '.');
+    }
+    return value;
+  }
+
+  function automationDraftKey_() {
+    return 'kanban:automation-draft:v1:' + (automationProjectId || currentProjectId);
+  }
+
+  function automationFormRaw_() {
+    return {
+      wipDev: getVal('a_wipDev'), wipMerge: getVal('a_wipMerge'),
+      wipUat: getVal('a_wipUat'), staleDays: getVal('a_staleDays'),
+      blockerHours: getVal('a_blockerHours'), uatHours: getVal('a_uatHours')
+    };
+  }
+
+  function onAutomationFormChanged_() {
+    if (!automationData || automationInFlight) return;
+    automationDirty = true;
+    saveAutomationDraft_();
+  }
+
+  function saveAutomationDraft_() {
+    if (!automationData || (!automationDirty && !pendingAutomationMetadata)) return;
+    try {
+      localStorage.setItem(automationDraftKey_(), JSON.stringify({
+        version: automationData.settings.version,
+        values: automationFormRaw_(),
+        requestMetadata: pendingAutomationMetadata,
+        updatedAt: new Date().toISOString()
+      }));
+    } catch (ignored) {}
+  }
+
+  function restoreAutomationDraft_() {
+    var draft = null;
+    try { draft = JSON.parse(localStorage.getItem(automationDraftKey_()) || 'null'); } catch (ignored) {}
+    if (!draft) return false;
+    if (Number(draft.version) !== Number(automationData.settings.version)) {
+      clearAutomationDraft_();
+      setAutomationState_('Um rascunho antigo foi descartado porque as regras mudaram em outra sessão.', true);
+      return false;
+    }
+    var values = draft.values || {};
+    setVal('a_wipDev', values.wipDev); setVal('a_wipMerge', values.wipMerge);
+    setVal('a_wipUat', values.wipUat); setVal('a_staleDays', values.staleDays);
+    setVal('a_blockerHours', values.blockerHours); setVal('a_uatHours', values.uatHours);
+    pendingAutomationMetadata = draft.requestMetadata || null;
+    automationDirty = true;
+    setAutomationState_('Rascunho de governança restaurado deste dispositivo.', false);
+    return true;
+  }
+
+  function clearAutomationDraft_() {
+    try { localStorage.removeItem(automationDraftKey_()); } catch (ignored) {}
+  }
+
+  function setAutomationBusy_(busyState) {
+    automationInFlight = !!busyState;
+    document.getElementById('automationRefresh').disabled = automationInFlight;
+    document.getElementById('automationSave').disabled = automationInFlight;
+  }
+
+  function setAutomationState_(message, isError) {
+    var element = document.getElementById('automationState');
+    element.textContent = message;
+    element.style.color = isError ? 'var(--danger)' : 'var(--muted)';
+  }
+
+  function openAutomationEvidenceTask_(taskId) {
+    var task = DATA.tasks.find(function (item) { return item.id === taskId; });
+    if (!task || automationInFlight) return;
+    closeAutomation_();
+    openModal(task);
+  }
+
+  // --------------------------------------------------------- preferências ----
+
+  function loadPreferences_(projectId) {
+    var raw = null;
+    try {
+      raw = localStorage.getItem(PREFERENCES_KEY_PREFIX + projectId);
+      hadStoredPreferences = !!raw;
+      raw = raw ? JSON.parse(raw) : null;
+    } catch (ignored) { raw = null; }
+    raw = raw || {};
+    return {
+      theme: ['system', 'light', 'dark'].indexOf(raw.theme) !== -1 ? raw.theme : DEFAULT_PREFERENCES.theme,
+      assignee: String(raw.assignee || ''),
+      priority: String(raw.priority || ''),
+      flag: ['blocked', 'unblocked', 'uat_pending'].indexOf(raw.flag) !== -1 ? raw.flag : '',
+      period: ['today', 'this_week', 'next_week', 'this_month', 'previous_month', 'custom', 'all', 'overdue', 'no_due'].indexOf(raw.period) !== -1
+        ? raw.period : DEFAULT_PREFERENCES.period,
+      dateFrom: String(raw.dateFrom || ''), dateTo: String(raw.dateTo || ''),
+      visibleStatuses: Array.isArray(raw.visibleStatuses) ? raw.visibleStatuses.map(String) : [],
+      statusOrder: Array.isArray(raw.statusOrder) ? raw.statusOrder.map(String) : [],
+      compact: !!raw.compact
+    };
+  }
+
+  function initializePreferences_() {
+    if (!preferencesInitialized) {
+      preferencesInitialized = true;
+      if (!hadStoredPreferences && PREFS.period === 'this_week' &&
+          !DATA.tasks.some(function (task) { return !!task.dueDate; })) {
+        PREFS.period = 'all';
+        clientWarnings = ['O filtro inicial foi ajustado para “Todas as tarefas” porque a base existente ainda não possui prazos.'];
+      }
+    }
+    setVal('filterResp', PREFS.assignee);
+    setVal('filterPriority', PREFS.priority);
+    setVal('filterFlag', PREFS.flag);
+    setVal('filterPeriod', PREFS.period);
+    setVal('filterDateFrom', PREFS.dateFrom);
+    setVal('filterDateTo', PREFS.dateTo);
+    setVal('themeMode', PREFS.theme);
+    document.getElementById('compactMode').checked = PREFS.compact;
+    document.body.classList.toggle('compact', PREFS.compact);
+    updateCustomPeriodVisibility_();
+    applyTheme_(PREFS.theme);
+    renderStatusPreferences_();
+  }
+
+  function savePreferences_() {
+    try { localStorage.setItem(PREFERENCES_KEY_PREFIX + currentProjectId, JSON.stringify(PREFS)); } catch (ignored) {}
+  }
+
+  function onPreferenceControlChanged_() {
+    PREFS.assignee = getVal('filterResp');
+    PREFS.priority = getVal('filterPriority');
+    PREFS.flag = getVal('filterFlag');
+    PREFS.period = getVal('filterPeriod');
+    PREFS.dateFrom = getVal('filterDateFrom');
+    PREFS.dateTo = getVal('filterDateTo');
+    savePreferences_();
+    updateCustomPeriodVisibility_();
+    if (PREFS.period === 'custom' && PREFS.dateFrom && PREFS.dateTo && PREFS.dateFrom > PREFS.dateTo) {
+      toast('O início do período deve ser anterior ao fim.', true);
+    }
+    render();
+  }
+
+  function onPeriodChanged_() {
+    onPreferenceControlChanged_();
+    if (PREFS.period === 'custom' && !PREFS.dateFrom && !PREFS.dateTo) {
+      document.getElementById('filterDateFrom').focus();
+    }
+  }
+
+  function updateCustomPeriodVisibility_() {
+    document.getElementById('customPeriod').classList.toggle('open', PREFS.period === 'custom');
+  }
+
+  function onThemeChanged_() {
+    PREFS.theme = getVal('themeMode');
+    applyTheme_(PREFS.theme);
+    savePreferences_();
+  }
+
+  function applyTheme_(mode) {
+    if (mode === 'light' || mode === 'dark') document.documentElement.setAttribute('data-theme', mode);
+    else document.documentElement.removeAttribute('data-theme');
+  }
+
+  function onCompactChanged_() {
+    PREFS.compact = document.getElementById('compactMode').checked;
+    document.body.classList.toggle('compact', PREFS.compact);
+    savePreferences_();
+  }
+
+  function toggleViewPanel_(ev) {
+    if (ev) ev.stopPropagation();
+    var panel = document.getElementById('viewPanel');
+    var open = !panel.classList.contains('open');
+    panel.classList.toggle('open', open);
+    document.getElementById('viewButton').setAttribute('aria-expanded', String(open));
+  }
+
+  function orderedStatuses_() {
+    var byName = {};
+    DATA.statuses.forEach(function (status) { byName[status.name] = status; });
+    var result = [];
+    PREFS.statusOrder.forEach(function (name) {
+      if (byName[name]) { result.push(byName[name]); delete byName[name]; }
+    });
+    DATA.statuses.forEach(function (status, defaultIndex) {
+      if (!byName[status.name]) return;
+      var insertAt = result.length;
+      for (var i = defaultIndex + 1; i < DATA.statuses.length; i++) {
+        var nextName = DATA.statuses[i].name;
+        var currentIndex = result.findIndex(function (item) { return item.name === nextName; });
+        if (currentIndex !== -1) { insertAt = currentIndex; break; }
+      }
+      result.splice(insertAt, 0, status);
+      delete byName[status.name];
+    });
+    return result;
+  }
+
+  function visibleStatusNames_() {
+    var all = DATA.statuses.map(function (status) { return status.name; });
+    if (!PREFS.visibleStatuses.length) return all;
+    return all.filter(function (name) { return PREFS.visibleStatuses.indexOf(name) !== -1; });
+  }
+
+  function renderStatusPreferences_() {
+    var root = document.getElementById('statusPreferences');
+    if (!root || !DATA.statuses.length) return;
+    root.innerHTML = '';
+    var visible = visibleStatusNames_();
+    var ordered = orderedStatuses_();
+    ordered.forEach(function (status, index) {
+      var row = document.createElement('div');
+      row.className = 'view-row';
+      var checkbox = document.createElement('input');
+      checkbox.type = 'checkbox'; checkbox.checked = visible.indexOf(status.name) !== -1;
+      checkbox.setAttribute('aria-label', 'Exibir ' + status.name);
+      checkbox.addEventListener('change', function () { setStatusVisibility_(status.name, checkbox.checked); });
+      var label = document.createElement('label'); label.textContent = status.name;
+      var up = document.createElement('button'); up.className = 'icon-btn'; up.textContent = '↑'; up.disabled = index === 0;
+      up.title = 'Mover coluna para a esquerda'; up.addEventListener('click', function () { moveStatus_(status.name, -1); });
+      var down = document.createElement('button'); down.className = 'icon-btn'; down.textContent = '↓'; down.disabled = index === ordered.length - 1;
+      down.title = 'Mover coluna para a direita'; down.addEventListener('click', function () { moveStatus_(status.name, 1); });
+      row.appendChild(checkbox); row.appendChild(label); row.appendChild(up); row.appendChild(down);
+      root.appendChild(row);
+    });
+  }
+
+  function setStatusVisibility_(name, checked) {
+    var visible = visibleStatusNames_();
+    var index = visible.indexOf(name);
+    if (checked && index === -1) visible.push(name);
+    if (!checked && index !== -1) {
+      if (visible.length === 1) {
+        toast('Pelo menos uma coluna deve permanecer visível.', true);
+        renderStatusPreferences_();
+        return;
+      }
+      visible.splice(index, 1);
+    }
+    PREFS.visibleStatuses = visible.length === DATA.statuses.length ? [] : visible;
+    savePreferences_(); renderStatusPreferences_(); render();
+  }
+
+  function moveStatus_(name, delta) {
+    var order = orderedStatuses_().map(function (status) { return status.name; });
+    var index = order.indexOf(name); var target = index + delta;
+    if (index < 0 || target < 0 || target >= order.length) return;
+    var temp = order[index]; order[index] = order[target]; order[target] = temp;
+    PREFS.statusOrder = order;
+    savePreferences_(); renderStatusPreferences_(); render();
+  }
+
+  function resetViewPreferences_() {
+    PREFS.visibleStatuses = []; PREFS.statusOrder = []; PREFS.compact = false;
+    document.getElementById('compactMode').checked = false;
+    document.body.classList.remove('compact');
+    savePreferences_(); renderStatusPreferences_(); render();
+  }
+
+  // ------------------------------------------------------------ ordenação ----
+  // Mesma chave da aba CALC: (10-P)*100000 + (D vazio?99:D)*1000 + nº do ID.
+  function sortKey(t) {
+    var p = (t.prioridade === '' || t.prioridade == null) ? 0 : Number(t.prioridade);
+    var d = (t.dificuldade === '' || t.dificuldade == null) ? 99 : Number(t.dificuldade);
+    var idMatch = String(t.id).match(/(\d+)$/);
+    var idn = idMatch ? parseInt(idMatch[1], 10) : 0;
+    return (10 - p) * 100000 + d * 1000 + idn;
+  }
+
+  function scheduleRender_() {
+    clearTimeout(searchRenderTimer);
+    searchRenderTimer = setTimeout(render, 180);
+  }
+
+  function clearBoardFilters_() {
+    clearTimeout(searchRenderTimer);
+    PREFS.assignee = '';
+    PREFS.priority = '';
+    PREFS.flag = '';
+    PREFS.period = 'all';
+    PREFS.dateFrom = '';
+    PREFS.dateTo = '';
+    setVal('filterResp', '');
+    setVal('filterPriority', '');
+    setVal('filterFlag', '');
+    setVal('filterPeriod', 'all');
+    setVal('filterDateFrom', '');
+    setVal('filterDateTo', '');
+    setVal('search', '');
+    updateCustomPeriodVisibility_();
+    savePreferences_();
+    render();
+    document.getElementById('search').focus();
+  }
+
+  function priorityLabel_(value) {
+    var labels = { 1: 'Baixa', 2: 'Normal', 3: 'Média', 4: 'Alta', 5: 'Crítica' };
+    return labels[Number(value)] || 'Sem prioridade';
+  }
+
+  function renderFilterEmpty_(visibleCount) {
+    var root = document.getElementById('filterEmpty');
+    root.innerHTML = '';
+    root.classList.toggle('open', visibleCount === 0);
+    if (visibleCount !== 0) return;
+
+    var message = document.createElement('span');
+    message.textContent = DATA.tasks.length
+      ? 'Nenhuma tarefa corresponde aos filtros atuais.'
+      : 'Este projeto ainda não possui tarefas.';
+    root.appendChild(message);
+
+    var button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'btn ' + (DATA.tasks.length ? 'btn-ghost' : 'btn-primary');
+    button.textContent = DATA.tasks.length ? 'Limpar filtros' : 'Criar primeira tarefa';
+    button.addEventListener('click', DATA.tasks.length ? clearBoardFilters_ : function () { openModal(null); });
+    root.appendChild(button);
+  }
+
+  // ------------------------------------------------------------ render ----
+  function render() {
+    var board = document.getElementById('board');
+    var boardScrollLeft = board.scrollLeft;
+    var laneScrollTop = {};
+    board.querySelectorAll('.col-body[data-status]').forEach(function (lane) {
+      laneScrollTop[lane.dataset.status] = lane.scrollTop;
+    });
+    board.innerHTML = '';
+    var fResp = document.getElementById('filterResp').value;
+    var fPriority = document.getElementById('filterPriority').value;
+    var fFlag = document.getElementById('filterFlag').value;
+    var q = document.getElementById('search').value.trim().toLowerCase();
+
+    var visible = DATA.tasks.filter(function (t) {
+      if (fResp === '__na__' && t.responsavel) return false;
+      if (fResp && fResp !== '__na__' && t.responsavel !== fResp) return false;
+      if (fPriority === '__none__' && t.prioridade !== '' && t.prioridade != null) return false;
+      if (fPriority && fPriority !== '__none__' && Number(t.prioridade) !== Number(fPriority)) return false;
+      if (fFlag === 'blocked' && !t.blocker) return false;
+      if (fFlag === 'unblocked' && t.blocker) return false;
+      if (fFlag === 'uat_pending' && (!t.uat || t.uat.status !== 'PENDING')) return false;
+      if (!matchesPeriod_(t, PREFS.period)) return false;
+      if (q) {
+        var hay = (t.id + ' ' + t.tarefa + ' ' + t.descricao + ' ' + t.subtarefas + ' ' +
+          t.observacoes + ' ' + t.dependencias + ' ' + t.responsavel).toLowerCase();
+        if (hay.indexOf(q) === -1) return false;
+      }
+      return true;
+    });
+
+    var visibleStatusNames = visibleStatusNames_();
+    renderFilterEmpty_(visible.length);
+    orderedStatuses_().filter(function (status) {
+      return visibleStatusNames.indexOf(status.name) !== -1;
+    }).forEach(function (s) {
+      var col = document.createElement('section');
+      col.className = 'col';
+      col.setAttribute('aria-label', 'Etapa ' + s.name);
+
+      var head = document.createElement('h2');
+      head.className = 'col-head';
+      head.style.background = s.light;
+      // A cor oficial do status é a base; o leve escurecimento mantém DEV acima de 4,5:1.
+      head.style.color = 'color-mix(in srgb, ' + s.font + ' 82%, #000)';
+      head.style.borderTopColor = s.header;
+      var inCol = visible.filter(function (t) { return t.status === s.name; })
+                         .sort(function (a, b) { return sortKey(a) - sortKey(b); });
+      head.innerHTML = '<span>' + esc(s.name) + '</span><span class="count">' + inCol.length + ' tarefa(s)</span>';
+      col.appendChild(head);
+
+      var body = document.createElement('div');
+      body.className = 'col-body';
+      body.style.background = s.light;
+      body.dataset.status = s.name;
+      body.setAttribute('role', inCol.length ? 'list' : 'status');
+      body.setAttribute('aria-label', 'Tarefas em ' + s.name);
+      body.addEventListener('dragover', function (ev) { ev.preventDefault(); body.classList.add('dragover'); });
+      body.addEventListener('dragleave', function () { body.classList.remove('dragover'); });
+      body.addEventListener('drop', function (ev) {
+        ev.preventDefault();
+        body.classList.remove('dragover');
+        var id = ev.dataTransfer.getData('text/plain');
+        dropCard(id, s.name);
+      });
+
+      inCol.forEach(function (t) { body.appendChild(cardEl(t, s)); });
+      if (!inCol.length) {
+        var empty = document.createElement('div');
+        empty.className = 'col-empty';
+        empty.textContent = 'Nenhuma tarefa nesta etapa';
+        body.appendChild(empty);
+      }
+      col.appendChild(body);
+      board.appendChild(col);
+    });
+
+    document.getElementById('stats').textContent =
+      visible.length + ' de ' + DATA.tasks.length + ' tarefa(s)' +
+      (visibleStatusNames.length < DATA.statuses.length ? ' · ' + visibleStatusNames.length + '/' + DATA.statuses.length + ' colunas' : '');
+
+    requestAnimationFrame(function () {
+      board.scrollLeft = boardScrollLeft;
+      board.querySelectorAll('.col-body[data-status]').forEach(function (lane) {
+        if (Object.prototype.hasOwnProperty.call(laneScrollTop, lane.dataset.status)) {
+          lane.scrollTop = laneScrollTop[lane.dataset.status];
+        }
+      });
+    });
+  }
+
+  function matchesPeriod_(task, mode) {
+    var due = String(task.dueDate || '');
+    if (mode === 'all') return true;
+    if (mode === 'no_due') return !due;
+    if (mode === 'overdue') return !!due && due < todayIso_() && !isTaskCompleted_(task);
+    if (!due) return false;
+    var bounds = periodBounds_(mode);
+    if (!bounds) return true;
+    if (bounds.from && due < bounds.from) return false;
+    if (bounds.to && due > bounds.to) return false;
+    return true;
+  }
+
+  function periodBounds_(mode) {
+    if (mode === 'custom') return { from: PREFS.dateFrom, to: PREFS.dateTo };
+    var today = startOfDay_(new Date());
+    if (mode === 'today') return { from: localIso_(today), to: localIso_(today) };
+    if (mode === 'this_week' || mode === 'next_week') {
+      var monday = addDays_(today, -((today.getDay() + 6) % 7));
+      if (mode === 'next_week') monday = addDays_(monday, 7);
+      return { from: localIso_(monday), to: localIso_(addDays_(monday, 6)) };
+    }
+    if (mode === 'this_month') {
+      return {
+        from: localIso_(new Date(today.getFullYear(), today.getMonth(), 1)),
+        to: localIso_(new Date(today.getFullYear(), today.getMonth() + 1, 0))
+      };
+    }
+    if (mode === 'previous_month') {
+      return {
+        from: localIso_(new Date(today.getFullYear(), today.getMonth() - 1, 1)),
+        to: localIso_(new Date(today.getFullYear(), today.getMonth(), 0))
+      };
+    }
+    return null;
+  }
+
+  function isTaskCompleted_(task) {
+    return !!task.dataConclusao || task.status === 'PRODUÇÃO';
+  }
+
+  function isOverdue_(task) {
+    return !!task.dueDate && String(task.dueDate) < todayIso_() && !isTaskCompleted_(task);
+  }
+
+  function startOfDay_(date) { return new Date(date.getFullYear(), date.getMonth(), date.getDate()); }
+  function addDays_(date, days) { return new Date(date.getFullYear(), date.getMonth(), date.getDate() + days); }
+  function localIso_(date) {
+    return date.getFullYear() + '-' + pad2_(date.getMonth() + 1) + '-' + pad2_(date.getDate());
+  }
+  function todayIso_() { return localIso_(new Date()); }
+  function pad2_(value) { return value < 10 ? '0' + value : String(value); }
+
+  function cardEl(t, s) {
+    var el = document.createElement('article');
+    el.className = 'kcard' + (t.blocker ? ' blocked' : '') + (t._pending ? ' pending' : '');
+    el.tabIndex = 0;
+    el.setAttribute('role', 'listitem');
+    el.setAttribute('aria-label', 'Abrir tarefa ' + t.id + ': ' + t.tarefa + '. Status ' + t.status + '. Prioridade ' + priorityLabel_(t.prioridade) + '.');
+    el.setAttribute('aria-busy', String(!!t._pending));
+    el.draggable = t.status !== 'UAT' && !t._pending;
+    if (t.status === 'UAT') el.title = 'Use Aprovar ou Reprovar UAT para sair desta etapa.';
+    el.style.borderLeftColor = s.header;
+
+    var pc = DATA.priorityColors[t.prioridade];
+    var badgeBg = pc ? pc[0] : 'var(--badge-neutral-bg)';
+    var badgeFg = pc ? pc[1] : 'var(--badge-neutral-text)';
+    var pTxt = (t.prioridade === '' || t.prioridade == null) ? '–' : t.prioridade;
+    var priorityText = priorityLabel_(t.prioridade);
+
+    var respHtml = t.responsavel
+      ? '<span class="resp"><span class="avatar">' + esc(t.responsavel.charAt(0).toUpperCase()) + '</span>' + esc(t.responsavel) + '</span>'
+      : '<span class="resp na">Não atribuído</span>';
+
+    var pct = Math.round((t.pct || 0) * 100);
+    var dueHtml = t.dueDate
+      ? '<div class="due' + (isOverdue_(t) ? ' overdue' : '') + '">Prazo: ' + esc(formatShortDate_(t.dueDate)) + (isOverdue_(t) ? ' · atrasada' : '') + '</div>'
+      : '<div class="due">Sem prazo</div>';
+    var flowTags = '';
+    if (t.blocker) flowTags += '<span class="flow-tag blocked">BLOQUEADA</span>';
+    if (t.uat && t.uat.status === 'PENDING') flowTags += '<span class="flow-tag uat">UAT PENDENTE</span>';
+    if (flowTags) flowTags = '<div class="flow-tags">' + flowTags + '</div>';
+
+    var ordered = DATA.statuses;
+    var statusIndex = ordered.findIndex(function (status) { return status.name === t.status; });
+    var previousStatus = statusIndex > 0 ? ordered[statusIndex - 1].name : '';
+    var nextStatus = statusIndex >= 0 && statusIndex < ordered.length - 1 ? ordered[statusIndex + 1].name : '';
+    var moveActions = '';
+    if (t.status !== 'UAT' && !t._pending && (previousStatus || nextStatus)) {
+      moveActions = '<div class="card-actions">' +
+        (previousStatus ? '<button type="button" class="card-move" data-status="' + esc(previousStatus) + '" aria-label="Mover ' + esc(t.id) + ' para ' + esc(previousStatus) + '">← ' + esc(previousStatus) + '</button>' : '') +
+        (nextStatus ? '<button type="button" class="card-move" data-status="' + esc(nextStatus) + '" aria-label="Mover ' + esc(t.id) + ' para ' + esc(nextStatus) + '">' + esc(nextStatus) + ' →</button>' : '') +
+        '</div>';
+    }
+
+    el.innerHTML =
+      '<div class="row1"><span class="id">' + esc(t.id) + '</span>' +
+      '<span class="badge priority-label" style="background:' + badgeBg + ';color:' + badgeFg + '">P' + esc(String(pTxt)) + ' · ' + esc(priorityText) + '</span></div>' +
+      '<div class="title">' + esc(t.tarefa) + '</div>' + flowTags +
+      '<div class="row3">' + respHtml +
+      '<span class="pctwrap"><span class="pctbar"><div style="width:' + pct + '%"></div></span>' +
+      '<span class="pcttxt">' + pct + '%</span></span>' +
+      (t._pending ? '<span class="pending-label">Salvando…</span>' : '') +
+      '</div>' + dueHtml + moveActions;
+
+    el.addEventListener('dragstart', function (ev) {
+      if (t._pending || t.status === 'UAT') { ev.preventDefault(); return; }
+      ev.dataTransfer.setData('text/plain', t.id);
+      ev.dataTransfer.effectAllowed = 'move';
+      el.classList.add('dragging');
+    });
+    el.addEventListener('dragend', function () { el.classList.remove('dragging'); });
+    el.querySelectorAll('.card-move').forEach(function (button) {
+      button.draggable = false;
+      button.addEventListener('pointerdown', function (ev) { ev.stopPropagation(); });
+      button.addEventListener('dragstart', function (ev) { ev.preventDefault(); });
+      button.addEventListener('click', function (ev) {
+        ev.stopPropagation();
+        dropCard(t.id, button.getAttribute('data-status'));
+      });
+    });
+    el.addEventListener('click', function (ev) {
+      if (t._pending) return;
+      if (ev.target.closest && ev.target.closest('.card-move')) return;
+      openModal(t);
+    });
+    el.addEventListener('keydown', function (ev) {
+      if (t._pending || ev.target !== el || (ev.key !== 'Enter' && ev.key !== ' ')) return;
+      ev.preventDefault();
+      openModal(t);
+    });
+    return el;
+  }
+
+  // ------------------------------------------------------- drag & drop ----
+  function dropCard(id, newStatus) {
+    var t = DATA.tasks.find(function (x) { return x.id === id; });
+    if (!t || t.status === newStatus || t._pending) return;
+    if (t.status === 'UAT') {
+      toast('Use Aprovar ou Reprovar UAT para sair desta etapa.', true);
+      return;
+    }
+    var old = t.status;
+    var metadata = clientMetadata_();
+    t._pending = true;
+    t.status = newStatus;          // otimista
+    render();
+    requestStatusMove_(t, old, newStatus, metadata, true);
+  }
+
+  function requestStatusMove_(task, oldStatus, newStatus, metadata, allowRebase) {
+    google.script.run
+      .withSuccessHandler(function (data) {
+        onData(data);
+        toast('Tarefa ' + task.id + ' movida para ' + newStatus + '.');
+      })
+      .withFailureHandler(function (err) {
+        task.status = oldStatus;
+        task._pending = false;
+        render();
+        if (allowRebase && isVersionConflict_(err)) {
+          reconcileStatusMove_(task.id, oldStatus, newStatus, metadata);
+          return;
+        }
+        handleStatusMoveFailure_(err);
+      })
+      .updateTaskStatus(task.id, newStatus, task.version, metadata);
+  }
+
+  /** Recarrega e repete uma única vez quando apenas a versão ficou obsoleta.
+   * O retry só acontece se o status no servidor ainda for exatamente o status
+   * de origem; uma movimentação concorrente real nunca é sobrescrita. */
+  function reconcileStatusMove_(id, oldStatus, newStatus, metadata) {
+    toast('Sincronizando a versão mais recente de ' + id + '…');
+    google.script.run
+      .withSuccessHandler(function (data) {
+        var fresh = (data.tasks || []).find(function (task) { return task.id === id; });
+        if (!fresh) {
+          onData(data);
+          handleStatusMoveFailure_({ message: 'A tarefa ' + id + ' não está mais disponível neste projeto.' });
+          return;
+        }
+        if (fresh.status === newStatus) {
+          onData(data);
+          toast('Quadro sincronizado; a tarefa ' + id + ' já está em ' + newStatus + '.');
+          return;
+        }
+        if (fresh.status !== oldStatus) {
+          onData(data);
+          handleStatusMoveFailure_({
+            message: 'STATUS_CONFLICT|' + id + '|' + oldStatus + '|' + fresh.status
+          });
+          return;
+        }
+        fresh._pending = true;
+        fresh.status = newStatus;
+        onData(data);
+        requestStatusMove_(fresh, oldStatus, newStatus, metadata, false);
+      })
+      .withFailureHandler(handleStatusMoveFailure_)
+      .getBoardData(currentProjectId);
+  }
+
+  function isVersionConflict_(err) {
+    var msg = (err && err.message) ? err.message : String(err || '');
+    return msg.indexOf('CONFLICT|') !== -1 || msg.indexOf('VERSION_REQUIRED|') !== -1;
+  }
+
+  function handleStatusMoveFailure_(err) {
+    var msg = (err && err.message) ? err.message : String(err);
+    if (msg.indexOf('STATUS_CONFLICT|') !== -1 || isVersionConflict_(err)) {
+      toast('O status mudou em outra sessão. O quadro foi atualizado e nenhuma alteração foi sobrescrita.', true);
+      return;
+    }
+    if (msg.indexOf('UAT_DECISION_REQUIRED|') !== -1) {
+      toast('Use Aprovar ou Reprovar UAT para sair desta etapa.', true);
+      return;
+    }
+    toast(msg, true);
+  }
+
+  // ------------------------------------------------------------- modal ----
+  function openModal(t) {
+    editingId = t ? t.id : null;
+    editingTask = t || null;
+    editingVersion = t ? Number(t.version || 1) : null;
+    pendingRequestMetadata = null;
+    pendingWorkflowMetadata = {};
+    taskSaveInFlight = false;
+    clearFormError_();
+    document.getElementById('m_title').textContent = t ? 'Editar tarefa' : 'Nova tarefa';
+    document.getElementById('m_id').textContent = t ? t.id : '(ID automático)';
+    document.getElementById('btnDelete').style.display = t ? '' : 'none';
+
+    setVal('f_tarefa', t ? t.tarefa : '');
+    setVal('f_descricao', t ? t.descricao : '');
+    setVal('f_subtarefas', t ? t.subtarefas : '');
+    setVal('f_prioridade', t && t.prioridade !== '' ? String(t.prioridade) : '');
+    setVal('f_dificuldade', t && t.dificuldade !== '' ? String(t.dificuldade) : '');
+    setVal('f_status', t ? t.status : 'BACKLOG');
+    document.getElementById('f_status').disabled = !!(t && t.status === 'UAT');
+    setVal('f_responsavel', t ? t.responsavel : '');
+    setVal('f_dependencias', t ? t.dependencias : '');
+    setVal('f_observacoes', t ? t.observacoes : '');
+    setVal('f_dataCriacao', t ? t.dataCriacao : '');
+    setVal('f_dataInicio', t ? t.dataInicio : '');
+    setVal('f_dataConclusao', t ? t.dataConclusao : '');
+    setVal('f_dueDate', t ? t.dueDate : '');
+    var pct = t ? Math.round((t.pct || 0) * 100) : 0;
+    setVal('f_pct', pct);
+    document.getElementById('pctlabel').textContent = pct + '%';
+    updScore();
+    renderWorkflow_(t);
+    formBaseline = formSignature_();
+    formDirty = false;
+    setDraftStatus_('');
+    restoreDraftIfAvailable_();
+    document.getElementById('overlay').classList.add('open');
+    document.getElementById('f_tarefa').focus();
+    if (t) loadTaskContextExtras_(t.id);
+  }
+
+  function cancelModal() {
+    if (formDirty) {
+      if (!confirm('Fechar o formulário? O rascunho ficará salvo para você restaurar depois.')) return;
+      saveDraft_();
+    }
+    closeModal_();
+  }
+
+  function closeModal_() {
+    document.getElementById('overlay').classList.remove('open');
+    clearTimeout(draftTimer);
+    editingId = null;
+    editingTask = null;
+    editingVersion = null;
+    formBaseline = '';
+    formDirty = false;
+    pendingRequestMetadata = null;
+    pendingWorkflowMetadata = {};
+    taskSaveInFlight = false;
+    clearFormError_();
+    setDraftStatus_('');
+  }
+
+  function updScore() {
+    var p = Number(getVal('f_prioridade'));
+    var d = Number(getVal('f_dificuldade'));
+    document.getElementById('score').textContent = (p && d) ? (p * d) : '—';
+  }
+
+  function renderWorkflow_(task) {
+    var root = document.getElementById('workflowContent');
+    if (!task) {
+      root.innerHTML = '<div class="workflow-meta">Salve a tarefa antes de registrar bloqueios ou decisões de UAT.</div>';
+      return;
+    }
+    var html = '';
+    if (task.blocker) {
+      html += '<div class="workflow-card blocker">' +
+        '<div class="workflow-title">Bloqueio ativo</div>' +
+        '<div class="workflow-text">' + esc(task.blocker.reason) + '</div>' +
+        '<div class="workflow-meta">Desde ' + esc(formatDateTime_(task.blocker.blockedAt)) +
+        ' · ' + esc(formatElapsed_(task.blocker.blockedAt)) +
+        (task.blocker.blockedBy ? ' · por ' + esc(task.blocker.blockedBy) : '') +
+        (task.blocker.unblockOwner ? ' · desbloqueio: ' + esc(task.blocker.unblockOwner) : '') + '</div>' +
+        '<div class="workflow-form"><textarea id="f_blockResolution" rows="2" maxlength="2000" placeholder="Como o bloqueio foi resolvido?"></textarea></div>' +
+        '<div class="workflow-actions"><button class="btn btn-primary" onclick="unblockCurrentTask_()">Registrar desbloqueio</button></div>' +
+        '</div>';
+    } else {
+      html += '<div class="workflow-card">' +
+        '<div class="workflow-title">Sem bloqueio ativo</div>' +
+        '<div class="workflow-actions"><button class="btn btn-ghost" onclick="toggleBlockerForm_()">Informar bloqueio</button></div>' +
+        '<div id="blockerForm" class="workflow-form" style="display:none">' +
+        '<textarea id="f_blockReason" rows="3" maxlength="2000" placeholder="Motivo do bloqueio (obrigatório)"></textarea>' +
+        '<input id="f_unblockOwner" maxlength="200" placeholder="Responsável pelo desbloqueio (pessoa, time ou fornecedor)">' +
+        '<div class="workflow-actions"><button class="btn btn-danger" onclick="blockCurrentTask_()">Confirmar bloqueio</button></div>' +
+        '</div></div>';
+    }
+
+    if (task.status === 'UAT' && task.uat && task.uat.status === 'PENDING') {
+      html += '<div class="workflow-card uat">' +
+        '<div class="workflow-title">UAT pendente</div>' +
+        '<div class="workflow-text">' + esc(task.uat.criteria) + '</div>' +
+        '<div class="workflow-meta">Enviado em ' + esc(formatDateTime_(task.uat.submittedAt)) +
+        (task.uat.submittedBy ? ' · por ' + esc(task.uat.submittedBy) : '') + '</div>' +
+        '<div class="workflow-form"><textarea id="f_uatFeedback" rows="3" maxlength="4000" placeholder="Feedback da validação (obrigatório para reprovar)"></textarea></div>' +
+        '<div class="workflow-actions">' +
+        '<button class="btn btn-success" onclick="decideCurrentUat_(\'APPROVED\')">Aprovar e enviar para Produção</button>' +
+        '<button class="btn btn-danger" onclick="decideCurrentUat_(\'REJECTED\')">Reprovar e retornar para DEV</button>' +
+        '</div></div>';
+    } else if (task.uat) {
+      html += '<div class="workflow-card uat"><div class="workflow-title">Último UAT: ' +
+        esc(uatOutcomeLabel_(task.uat.status)) + '</div>' +
+        (task.uat.feedback ? '<div class="workflow-text">' + esc(task.uat.feedback) + '</div>' : '') +
+        '<div class="workflow-meta">' + esc(formatDateTime_(task.uat.decidedAt || task.uat.submittedAt)) + '</div></div>';
+    } else {
+      html += '<div class="workflow-meta">Para entrar em UAT, a tarefa precisa ter critérios de aceite preenchidos.</div>';
+    }
+    html += '<div id="contextExtras" class="workflow-card"><div class="workflow-meta">Carregando comentários e atividade…</div></div>';
+    root.innerHTML = html;
+  }
+
+  function loadTaskContextExtras_(taskId) {
+    google.script.run.withSuccessHandler(function (context) {
+      if (!editingId || editingId !== taskId) return;
+      renderTaskContextExtras_(context);
+    }).withFailureHandler(function (err) {
+      var root = document.getElementById('contextExtras');
+      if (root) root.innerHTML = '<div class="workflow-meta">Não foi possível carregar o histórico.</div>';
+      console.error(err);
+    }).getTaskContext(taskId, currentProjectId);
+  }
+
+  function renderTaskContextExtras_(context) {
+    var root = document.getElementById('contextExtras');
+    if (!root) return;
+    var comments = (context.comments || []).slice(-20).reverse();
+    var activity = (context.activity || []).slice(0, 10);
+    var html = '<div class="workflow-title">Comentários e atividade</div>' +
+      '<div class="workflow-form"><textarea id="f_newComment" rows="2" maxlength="10000" placeholder="Adicionar comentário com decisão, evidência ou próximo passo"></textarea></div>' +
+      '<div class="workflow-actions"><button class="btn btn-ghost" onclick="addCurrentComment_()">Adicionar comentário</button></div>';
+    if (context.task && Number(context.task.version) !== Number(editingVersion)) {
+      html += '<div class="workflow-meta" style="color:var(--warning-text)">A tarefa mudou após a abertura deste formulário. Atualize antes de salvar ou comentar.</div>';
+    }
+    if (comments.length) {
+      html += '<div class="context-list">' + comments.map(function (comment) {
+        return '<div class="context-item"><div class="body">' + esc(comment.body) + '</div>' +
+          '<div class="meta">' + esc(comment.author || 'usuário') + ' · ' + esc(formatDateTime_(comment.createdAt)) +
+          ' · ' + esc(comment.source || 'kanban_html') + '</div></div>';
+      }).join('') + '</div>';
+    }
+    if (activity.length) {
+      html += '<div class="workflow-meta" style="margin-top:10px">Últimas atividades</div><div class="context-list">' +
+        activity.map(function (event) {
+          return '<div class="context-item"><div class="body">' + esc(activityLabel_(event.eventType)) + '</div>' +
+            '<div class="meta">' + esc(event.actor || 'usuário') + ' · ' + esc(formatDateTime_(event.occurredAt)) +
+            ' · ' + esc(event.source || '') + '</div></div>';
+        }).join('') + '</div>';
+    }
+    root.innerHTML = html;
+  }
+
+  function addCurrentComment_() {
+    if (!ensureWorkflowActionReady_()) return;
+    var body = getVal('f_newComment').trim();
+    if (!body) { toast('Escreva o comentário.', true); return; }
+    if (!ensureOnline_()) return;
+    var metadata = workflowMetadata_('comment');
+    busy(true);
+    google.script.run.withSuccessHandler(function (data) {
+      clearWorkflowMetadata_('comment');
+      refreshModalAfterWorkflow_(data, 'Comentário adicionado.');
+    }).withFailureHandler(handleMutationFailure)
+      .addTaskComment(editingId, editingVersion, body, metadata);
+  }
+
+  function activityLabel_(eventType) {
+    var labels = {
+      'task.created': 'Tarefa criada', 'task.updated': 'Tarefa atualizada',
+      'task.created_from_inbox': 'Tarefa criada a partir da Inbox',
+      'task.status_changed': 'Status alterado', 'task.commented': 'Comentário adicionado',
+      'task.blocked': 'Bloqueio registrado', 'task.unblocked': 'Bloqueio resolvido',
+      'uat.submitted': 'Enviada para UAT', 'uat.approved': 'UAT aprovado',
+      'uat.rejected': 'UAT reprovado', 'task.deleted': 'Movida para lixeira',
+      'task.restored': 'Restaurada da lixeira',
+      'project.automation_settings_updated': 'Governança do fluxo atualizada'
+    };
+    return labels[eventType] || eventType;
+  }
+
+  function toggleBlockerForm_() {
+    var form = document.getElementById('blockerForm');
+    if (!form) return;
+    var open = form.style.display === 'none';
+    form.style.display = open ? 'grid' : 'none';
+    if (open) document.getElementById('f_blockReason').focus();
+  }
+
+  function blockCurrentTask_() {
+    if (!ensureWorkflowActionReady_()) return;
+    var reason = getVal('f_blockReason').trim();
+    if (!reason) { toast('Informe o motivo do bloqueio.', true); return; }
+    if (!ensureOnline_()) return;
+    var metadata = workflowMetadata_('block');
+    busy(true);
+    google.script.run.withSuccessHandler(function (data) {
+      clearWorkflowMetadata_('block');
+      refreshModalAfterWorkflow_(data, 'Bloqueio registrado.');
+    }).withFailureHandler(handleMutationFailure)
+      .blockTask(editingId, editingVersion, {
+        reason: reason, unblockOwner: getVal('f_unblockOwner')
+      }, metadata);
+  }
+
+  function unblockCurrentTask_() {
+    if (!ensureWorkflowActionReady_()) return;
+    var resolution = getVal('f_blockResolution').trim();
+    if (!resolution) { toast('Informe como o bloqueio foi resolvido.', true); return; }
+    if (!ensureOnline_()) return;
+    var metadata = workflowMetadata_('unblock');
+    busy(true);
+    google.script.run.withSuccessHandler(function (data) {
+      clearWorkflowMetadata_('unblock');
+      refreshModalAfterWorkflow_(data, 'Desbloqueio registrado.');
+    }).withFailureHandler(handleMutationFailure)
+      .unblockTask(editingId, editingVersion, { resolution: resolution }, metadata);
+  }
+
+  function decideCurrentUat_(decision) {
+    if (!ensureWorkflowActionReady_()) return;
+    var feedback = getVal('f_uatFeedback').trim();
+    if (decision === 'REJECTED' && !feedback) { toast('Informe o feedback da reprovação.', true); return; }
+    var action = decision === 'APPROVED' ? 'aprovar' : 'reprovar';
+    if (!confirm('Deseja ' + action + ' o UAT desta tarefa? O status será atualizado automaticamente.')) return;
+    if (!ensureOnline_()) return;
+    var metadataKey = 'uat:' + decision;
+    var metadata = workflowMetadata_(metadataKey);
+    busy(true);
+    google.script.run.withSuccessHandler(function (data) {
+      clearWorkflowMetadata_(metadataKey);
+      refreshModalAfterWorkflow_(data, decision === 'APPROVED' ? 'UAT aprovado.' : 'UAT reprovado; tarefa retornada para DEV.');
+    }).withFailureHandler(handleMutationFailure)
+      .decideUat(editingId, editingVersion, decision, feedback, metadata);
+  }
+
+  function ensureWorkflowActionReady_() {
+    if (!editingId || !editingTask) return false;
+    if (formDirty) {
+      toast('Salve ou descarte as alterações do formulário antes de executar uma ação de workflow.', true);
+      return false;
+    }
+    return true;
+  }
+
+  function workflowMetadata_(action) {
+    if (!pendingWorkflowMetadata[action]) pendingWorkflowMetadata[action] = clientMetadata_();
+    return pendingWorkflowMetadata[action];
+  }
+
+  function clearWorkflowMetadata_(action) { delete pendingWorkflowMetadata[action]; }
+
+  function refreshModalAfterWorkflow_(data, message) {
+    var id = editingId;
+    onData(data);
+    var updated = DATA.tasks.find(function (task) { return task.id === id; });
+    if (updated) openModal(updated); else closeModal_();
+    toast(message);
+  }
+
+  function uatOutcomeLabel_(status) {
+    return status === 'APPROVED' ? 'Aprovado' : status === 'REJECTED' ? 'Reprovado' : 'Pendente';
+  }
+
+  function collect() {
+    return {
+      id: editingId,
+      version: editingVersion,
+      projectId: currentProjectId,
+      tarefa: getVal('f_tarefa'),
+      descricao: getVal('f_descricao'),
+      subtarefas: getVal('f_subtarefas'),
+      prioridade: getVal('f_prioridade'),
+      dificuldade: getVal('f_dificuldade'),
+      status: getVal('f_status'),
+      responsavel: getVal('f_responsavel'),
+      dependencias: getVal('f_dependencias'),
+      observacoes: getVal('f_observacoes'),
+      dataCriacao: getVal('f_dataCriacao'),
+      dataInicio: getVal('f_dataInicio'),
+      dataConclusao: getVal('f_dataConclusao'),
+      dueDate: getVal('f_dueDate'),
+      pct: Number(getVal('f_pct')) / 100
+    };
+  }
+
+  function save() {
+    if (taskSaveInFlight) return;
+    var t = collect();
+    var invalid = validateTaskForm_(t);
+    if (invalid) {
+      setFormError_(invalid.message, invalid.fieldId);
+      toast(invalid.message, true);
+      return;
+    }
+    if (!ensureOnline_()) return;
+    clearFormError_();
+    var metadata = pendingRequestMetadata || clientMetadata_();
+    pendingRequestMetadata = metadata;
+    saveDraft_();
+    taskSaveInFlight = true;
+    busy(true);
+    var run = google.script.run
+      .withSuccessHandler(function (d) {
+        taskSaveInFlight = false;
+        pendingRequestMetadata = null;
+        clearDraft_();
+        closeModal_();
+        onData(d);
+        toast('Tarefa salva.');
+      })
+      .withFailureHandler(function (err) {
+        taskSaveInFlight = false;
+        handleMutationFailure(err);
+      });
+    if (t.id) run.saveTask(t, metadata); else run.createTask(t, metadata);
+  }
+
+  function validateTaskForm_(task) {
+    var title = String(task.tarefa || '').trim();
+    if (!title) return { fieldId: 'f_tarefa', message: 'Informe o título da tarefa.' };
+    if (title.length > 300) return { fieldId: 'f_tarefa', message: 'O título deve ter no máximo 300 caracteres.' };
+
+    if (task.prioridade !== '') {
+      var priority = Number(task.prioridade);
+      if (!isFinite(priority) || priority < 1 || priority > 5 || Math.floor(priority) !== priority) {
+        return { fieldId: 'f_prioridade', message: 'Prioridade deve ser um inteiro entre 1 e 5.' };
+      }
+    }
+    if (task.dificuldade !== '') {
+      var difficulty = Number(task.dificuldade);
+      if (!isFinite(difficulty) || difficulty <= 0) {
+        return { fieldId: 'f_dificuldade', message: 'Dificuldade deve ser um número maior que zero.' };
+      }
+    }
+    if (!DATA.statuses.some(function (status) { return status.name === task.status; })) {
+      return { fieldId: 'f_status', message: 'Selecione um status válido.' };
+    }
+    if (task.responsavel && DATA.responsaveis.indexOf(task.responsavel) === -1) {
+      return { fieldId: 'f_responsavel', message: 'Selecione um responsável válido.' };
+    }
+    if (task.dataCriacao && task.dataInicio && task.dataInicio < task.dataCriacao) {
+      return { fieldId: 'f_dataInicio', message: 'A data de início não pode ser anterior à data de criação.' };
+    }
+    var comparisonStart = task.dataInicio || task.dataCriacao;
+    if (comparisonStart && task.dataConclusao && task.dataConclusao < comparisonStart) {
+      return { fieldId: 'f_dataConclusao', message: 'A data de conclusão não pode ser anterior ao início da tarefa.' };
+    }
+    if (task.status === 'UAT' && !String(task.subtarefas || '').trim()) {
+      return { fieldId: 'f_subtarefas', message: 'Preencha os critérios de aceite antes de enviar para UAT.' };
+    }
+    return null;
+  }
+
+  function removeTask() {
+    if (!editingId) return;
+    if (!confirm('Mover a tarefa ' + editingId + ' para a lixeira? Ela poderá ser restaurada.')) return;
+    busy(true);
+    var id = editingId;
+    var metadata = pendingRequestMetadata || clientMetadata_();
+    pendingRequestMetadata = metadata;
+    google.script.run
+      .withSuccessHandler(function (d) {
+        pendingRequestMetadata = null;
+        clearDraft_();
+        closeModal_();
+        onData(d);
+        toast('Tarefa ' + id + ' movida para a lixeira.');
+      })
+      .withFailureHandler(handleMutationFailure)
+      .deleteTask(id, editingVersion, metadata);
+  }
+
+  function handleMutationFailure(err) {
+    busy(false);
+    saveDraft_();
+    var msg = (err && err.message) ? err.message : String(err);
+    if (msg.indexOf('CONFLICT|') !== -1 || msg.indexOf('VERSION_REQUIRED|') !== -1) {
+      var conflictMessage = 'A tarefa foi alterada em outra sessão. Seu rascunho foi preservado; atualize e compare antes de salvar.';
+      setFormError_(conflictMessage);
+      toast(conflictMessage, true);
+      return;
+    }
+    if (msg.indexOf('UAT_DECISION_REQUIRED|') !== -1) {
+      var uatMessage = 'Use os botões Aprovar ou Reprovar UAT; a saída dessa etapa registra uma decisão auditável.';
+      setFormError_(uatMessage, 'f_status');
+      toast(uatMessage, true);
+      return;
+    }
+    setFormError_(msg);
+    toast(msg, true);
+  }
+
+  // ---------------------------------------------------------- rascunhos ----
+
+  function formFields_() {
+    return {
+      tarefa: getVal('f_tarefa'), descricao: getVal('f_descricao'),
+      subtarefas: getVal('f_subtarefas'), prioridade: getVal('f_prioridade'),
+      dificuldade: getVal('f_dificuldade'), status: getVal('f_status'),
+      responsavel: getVal('f_responsavel'), dependencias: getVal('f_dependencias'),
+      observacoes: getVal('f_observacoes'), dataCriacao: getVal('f_dataCriacao'),
+      dataInicio: getVal('f_dataInicio'), dataConclusao: getVal('f_dataConclusao'),
+      dueDate: getVal('f_dueDate'),
+      pct: getVal('f_pct')
+    };
+  }
+
+  function applyFormFields_(fields) {
+    Object.keys(fields || {}).forEach(function (name) {
+      var id = 'f_' + name;
+      if (document.getElementById(id)) setVal(id, fields[name]);
+    });
+    document.getElementById('pctlabel').textContent = getVal('f_pct') + '%';
+    updScore();
+  }
+
+  function formSignature_() { return JSON.stringify(formFields_()); }
+
+  function onFormChanged_(event) {
+    if (event && event.target && event.target.closest && event.target.closest('#workflowPanel')) return;
+    if (event && event.target && event.target.classList) {
+      event.target.classList.remove('invalid');
+      event.target.removeAttribute('aria-invalid');
+    }
+    pendingRequestMetadata = null;
+    formDirty = formSignature_() !== formBaseline;
+    if (!formDirty) {
+      clearDraft_();
+      return;
+    }
+    clearTimeout(draftTimer);
+    setDraftStatus_('Salvando rascunho…');
+    draftTimer = setTimeout(saveDraft_, 650);
+  }
+
+  function currentDraftKey_() {
+    if (!document.getElementById('overlay').classList.contains('open') && editingId === null && !formBaseline) return '';
+    return 'kanban:draft:v2:' + currentProjectId + ':' + (editingId || 'new');
+  }
+
+  function saveDraft_() {
+    clearTimeout(draftTimer);
+    if (!formDirty) return;
+    var key = currentDraftKey_();
+    if (!key) return;
+    var draft = {
+      schemaVersion: DRAFT_SCHEMA_VERSION,
+      taskId: editingId,
+      baseVersion: editingVersion,
+      fields: formFields_(),
+      updatedAt: new Date().toISOString(),
+      tabId: tabId,
+      requestMetadata: pendingRequestMetadata
+    };
+    try {
+      localStorage.setItem(key, JSON.stringify(draft));
+      setDraftStatus_('Rascunho salvo às ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }));
+      if (draftChannel) draftChannel.postMessage({ key: key, tabId: tabId, updatedAt: draft.updatedAt });
+    } catch (err) {
+      setDraftStatus_('Não foi possível salvar o rascunho');
+    }
+  }
+
+  function restoreDraftIfAvailable_() {
+    var key = currentDraftKey_();
+    if (!key) return;
+    var draft;
+    try { draft = JSON.parse(localStorage.getItem(key) || 'null'); } catch (ignored) { draft = null; }
+    if (!draft || draft.schemaVersion !== DRAFT_SCHEMA_VERSION || !draft.fields) return;
+    var changedOnServer = editingId && Number(draft.baseVersion || 1) !== Number(editingVersion || 1);
+    var when = draft.updatedAt ? new Date(draft.updatedAt).toLocaleString('pt-BR') : 'horário desconhecido';
+    var message = 'Existe um rascunho salvo em ' + when + '.\n\nOK: restaurar o rascunho.\nCancelar: usar a versão atual e descartar o rascunho.';
+    if (changedOnServer) message += '\n\nA tarefa mudou no servidor desde esse rascunho; a gravação poderá exigir revisão.';
+    if (confirm(message)) {
+      applyFormFields_(draft.fields);
+      editingVersion = draft.baseVersion === null || draft.baseVersion === undefined
+        ? editingVersion : Number(draft.baseVersion);
+      pendingRequestMetadata = draft.requestMetadata || null;
+      formDirty = formSignature_() !== formBaseline;
+      setDraftStatus_('Rascunho restaurado');
+    } else {
+      try { localStorage.removeItem(key); } catch (ignoredToo) {}
+    }
+  }
+
+  function clearDraft_() {
+    clearTimeout(draftTimer);
+    var key = currentDraftKey_();
+    if (key) {
+      try { localStorage.removeItem(key); } catch (ignored) {}
+    }
+    setDraftStatus_('');
+  }
+
+  function setDraftStatus_(text) { document.getElementById('draftStatus').textContent = text || ''; }
+
+  // ------------------------------------------------------------- lixeira ----
+
+  function openTrash() {
+    busy(true);
+    google.script.run.withSuccessHandler(function (d) {
+      busy(false);
+      renderTrash_(d.tasks || []);
+      document.getElementById('trashOverlay').classList.add('open');
+    }).withFailureHandler(fail).getTrashData(currentProjectId);
+  }
+
+  function closeTrash() { document.getElementById('trashOverlay').classList.remove('open'); }
+
+  function renderTrash_(tasks) {
+    var list = document.getElementById('trashList');
+    list.innerHTML = '';
+    if (!tasks.length) {
+      list.innerHTML = '<div class="empty-state">Nenhuma tarefa na lixeira.</div>';
+      return;
+    }
+    tasks.sort(function (a, b) { return String(b.deletedAt).localeCompare(String(a.deletedAt)); });
+    tasks.forEach(function (task) {
+      var item = document.createElement('div');
+      item.className = 'trash-item';
+      var main = document.createElement('div');
+      main.className = 'trash-main';
+      main.innerHTML = '<div class="trash-title">' + esc(task.id + ' — ' + task.tarefa) + '</div>' +
+        '<div class="trash-meta">Excluída em ' + esc(formatDateTime_(task.deletedAt)) +
+        (task.deletedBy ? ' por ' + esc(task.deletedBy) : '') + '</div>';
+      var button = document.createElement('button');
+      button.className = 'btn btn-primary';
+      button.textContent = 'Restaurar';
+      button.addEventListener('click', function () { restoreDeletedTask_(task); });
+      item.appendChild(main);
+      item.appendChild(button);
+      list.appendChild(item);
+    });
+  }
+
+  function restoreDeletedTask_(task) {
+    if (!confirm('Restaurar a tarefa ' + task.id + '?')) return;
+    busy(true);
+    google.script.run.withSuccessHandler(function (d) {
+      closeTrash();
+      onData(d);
+      toast('Tarefa ' + task.id + ' restaurada.');
+    }).withFailureHandler(handleMutationFailure)
+      .restoreTask(task.id, task.version, clientMetadata_());
+  }
+
+  // ------------------------------------------------------------ util ----
+  function setVal(id, v) { document.getElementById(id).value = v == null ? '' : v; }
+  function getVal(id) { return document.getElementById(id).value; }
+  function setFormError_(message, fieldId) {
+    var root = document.getElementById('formError');
+    if (!root) return;
+    root.textContent = message || '';
+    root.classList.toggle('open', !!message);
+    document.querySelectorAll('#modal .invalid').forEach(function (field) {
+      field.classList.remove('invalid'); field.removeAttribute('aria-invalid');
+    });
+    var field = fieldId ? document.getElementById(fieldId) : null;
+    if (field) {
+      field.classList.add('invalid');
+      field.setAttribute('aria-invalid', 'true');
+      field.focus();
+    }
+  }
+  function clearFormError_() { setFormError_(''); }
+  function ensureOnline_() {
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+      saveDraft_();
+      setFormError_('Sem conexão. O rascunho foi salvo neste dispositivo e poderá ser enviado quando a conexão voltar.');
+      toast('Sem conexão. Rascunho preservado.', true);
+      return false;
+    }
+    return true;
+  }
+  function busy(b) {
+    var active = !!b;
+    var loading = document.getElementById('loading');
+    loading.classList.toggle('open', active);
+    loading.setAttribute('aria-hidden', String(!active));
+    document.body.setAttribute('aria-busy', String(active));
+  }
+  var toastTimer = null;
+  function toast(msg, isErr) {
+    var el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = 'open' + (isErr ? ' err' : '');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { el.className = ''; }, 4000);
+  }
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function safeHref_(value) {
+    var text = String(value || '').trim();
+    return /^https?:\/\//i.test(text) ? text : '';
+  }
+
+  function makeId() {
+    try { if (window.crypto && window.crypto.randomUUID) return window.crypto.randomUUID(); } catch (ignored) {}
+    return Date.now().toString(36) + '-' + Math.random().toString(36).slice(2);
+  }
+
+  function clientMetadata_() {
+    var requestId = makeId();
+    return {
+      source: 'kanban_html', requestId: requestId, correlationId: requestId,
+      projectId: currentProjectId
+    };
+  }
+
+  function formatDateTime_(iso) {
+    if (!iso) return '—';
+    var date = new Date(iso);
+    return isNaN(date.getTime()) ? String(iso) : date.toLocaleString('pt-BR');
+  }
+
+  function formatShortDate_(iso) {
+    var match = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    return match ? match[3] + '/' + match[2] + '/' + match[1] : String(iso || '');
+  }
+
+  function formatElapsed_(iso) {
+    var start = new Date(iso);
+    if (isNaN(start.getTime())) return 'duração indisponível';
+    var minutes = Math.max(0, Math.floor((Date.now() - start.getTime()) / 60000));
+    if (minutes < 60) return minutes + ' min';
+    var hours = Math.floor(minutes / 60);
+    if (hours < 24) return hours + ' h';
+    var days = Math.floor(hours / 24);
+    return days + (days === 1 ? ' dia' : ' dias');
+  }
+
+  document.getElementById('modal').addEventListener('input', onFormChanged_);
+  document.getElementById('modal').addEventListener('change', onFormChanged_);
+  document.getElementById('automationModal').addEventListener('input', onAutomationFormChanged_);
+  document.getElementById('automationModal').addEventListener('change', onAutomationFormChanged_);
+  document.addEventListener('keydown', function (ev) {
+    if ((ev.ctrlKey || ev.metaKey) && ev.key === 'Enter' &&
+        document.getElementById('queryOverlay').classList.contains('open')) {
+      ev.preventDefault();
+      submitProjectQuestion_();
+      return;
+    }
+    if ((ev.ctrlKey || ev.metaKey) && ev.key === 'Enter' &&
+        document.getElementById('overlay').classList.contains('open')) {
+      ev.preventDefault();
+      save();
+      return;
+    }
+    if (ev.key === 'Escape') {
+      if (document.getElementById('viewPanel').classList.contains('open')) {
+        document.getElementById('viewPanel').classList.remove('open');
+        document.getElementById('viewButton').setAttribute('aria-expanded', 'false');
+        return;
+      }
+      if (document.getElementById('projectOverlay').classList.contains('open')) {
+        closeProjectModal_();
+        return;
+      }
+      if (document.getElementById('automationOverlay').classList.contains('open')) {
+        closeAutomation_();
+        return;
+      }
+      if (document.getElementById('queryOverlay').classList.contains('open')) {
+        closeQuery_();
+        return;
+      }
+      if (document.getElementById('inboxOverlay').classList.contains('open')) {
+        closeInbox_();
+        return;
+      }
+      if (document.getElementById('trashOverlay').classList.contains('open')) {
+        closeTrash();
+        return;
+      }
+      if (document.getElementById('overlay').classList.contains('open')) {
+        ev.preventDefault();
+        cancelModal();
+      }
+      return;
+    }
+    var target = ev.target;
+    var typing = target && (/^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName) || target.isContentEditable);
+    if (typing || document.getElementById('overlay').classList.contains('open')) return;
+    if (ev.key === '/' || ((ev.ctrlKey || ev.metaKey) && ev.key.toLowerCase() === 'k')) {
+      ev.preventDefault();
+      document.getElementById('search').focus();
+      return;
+    }
+    if (!ev.ctrlKey && !ev.metaKey && !ev.altKey && ev.key.toLowerCase() === 'n') openModal(null);
+  });
+
+  document.getElementById('viewPanel').addEventListener('click', function (ev) { ev.stopPropagation(); });
+  document.addEventListener('click', function () {
+    document.getElementById('viewPanel').classList.remove('open');
+    document.getElementById('viewButton').setAttribute('aria-expanded', 'false');
+  });
+
+  window.addEventListener('storage', function (ev) {
+    if (ev.key && ev.key === currentDraftKey_() && ev.newValue) {
+      toast('Outra aba salvou uma versão mais recente deste rascunho.', true);
+    }
+  });
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'hidden') saveDraft_();
+  });
+  window.addEventListener('pagehide', function () {
+    saveDraft_();
+    if (document.getElementById('inboxOverlay').classList.contains('open')) saveInboxDraft_();
+    if (document.getElementById('automationOverlay').classList.contains('open')) saveAutomationDraft_();
+  });
+  window.addEventListener('offline', function () {
+    toast('Sem conexão. O formulário continuará salvo localmente.', true);
+  });
+  window.addEventListener('online', function () { toast('Conexão restabelecida.'); });
+
+  applyTheme_(PREFS.theme);
+  load();
+</script>
+</body>
+</html>
