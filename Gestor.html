@@ -91,9 +91,36 @@ function dataCurta(iso) {
   return m ? m[3] + '/' + m[2] : '—';
 }
 
+// A auditoria grava em UTC; sem converter, a página mostraria 3 horas a mais
+// do que o relógio de quem lê. O fuso é fixo de propósito: o projeto é daqui,
+// não do navegador de quem abre.
+var FUSO = 'America/Sao_Paulo';
+
 function dataHora(iso) {
-  var m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/);
-  return m ? m[3] + '/' + m[2] + ' às ' + m[4] + ':' + m[5] : 'sem registro';
+  var texto = String(iso || '');
+  if (!/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}/.test(texto)) return 'sem registro';
+  var data = new Date(texto);
+  if (isNaN(data.getTime())) return 'sem registro';
+  try {
+    return data.toLocaleString('pt-BR', {
+      timeZone: FUSO, day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
+    }).replace(',', ' às');
+  } catch (ignored) {
+    return texto.slice(8, 10) + '/' + texto.slice(5, 7);
+  }
+}
+
+/** Data de um instante em UTC, já no fuso do projeto. */
+function dataDeInstante(iso) {
+  var texto = String(iso || '');
+  if (!/^\d{4}-\d{2}-\d{2}/.test(texto)) return '—';
+  var data = new Date(texto);
+  if (isNaN(data.getTime())) return '—';
+  try {
+    return data.toLocaleDateString('pt-BR', { timeZone: FUSO, day: '2-digit', month: '2-digit' });
+  } catch (ignored) {
+    return texto.slice(8, 10) + '/' + texto.slice(5, 7);
+  }
 }
 
 var CLASSE_ESTADO = {
@@ -185,7 +212,7 @@ function render(view) {
     view.blocked.forEach(function (item) {
       html += '<tr><td><strong>' + esc(item.title) + '</strong> <span class="id">' +
         esc(item.bloco || '') + '</span></td><td>' + esc(item.reason) + '</td>' +
-        '<td class="id">' + dataCurta(item.since) + '</td></tr>';
+        '<td class="id">' + dataDeInstante(item.since) + '</td></tr>';
     });
     html += '</tbody></table></div>';
   }

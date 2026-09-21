@@ -82,9 +82,26 @@ function relDataCurta_(iso) {
   return m ? m[3] + '/' + m[2] : '—';
 }
 
+/**
+ * A trilha de auditoria grava em UTC (toIsoDateTime_ usa 'Z'). Exibir esse
+ * texto cru mostraria 3 horas a mais do que o relógio de quem lê, então a
+ * conversão para o fuso do script acontece aqui, na apresentação.
+ */
 function relDataHora_(iso) {
-  var m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/);
-  return m ? m[3] + '/' + m[2] + ' às ' + m[4] + 'h' + m[5] : 'sem registro';
+  var texto = String(iso || '');
+  if (!/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}/.test(texto)) return 'sem registro';
+  var data = new Date(texto);
+  if (isNaN(data.getTime())) return 'sem registro';
+  return Utilities.formatDate(data, Session.getScriptTimeZone(), "dd/MM 'às' HH'h'mm");
+}
+
+/** Data de um instante em UTC, já no fuso local. */
+function relDataDeInstante_(iso) {
+  var texto = String(iso || '');
+  if (!/^\d{4}-\d{2}-\d{2}/.test(texto)) return '';
+  var data = new Date(texto);
+  if (isNaN(data.getTime())) return '';
+  return Utilities.formatDate(data, Session.getScriptTimeZone(), 'dd/MM');
 }
 
 function relBarra_(pct, cor) {
@@ -195,7 +212,7 @@ function montarRelatorioHtml_(view) {
       h.push('<div style="padding:11px 0;border-top:1px solid #e2e8f0">' +
         '<div style="font-size:14px;color:#0f172a">' + relEsc_(item.title) + '</div>' +
         '<div style="font-size:12px;color:#b91c1c;margin-top:3px">' + relEsc_(item.reason) +
-        (item.since ? ' · desde ' + relEsc_(relDataCurta_(item.since)) : '') + '</div></div>');
+        (item.since ? ' · desde ' + relEsc_(relDataDeInstante_(item.since)) : '') + '</div></div>');
     });
     h.push('</div>');
   }

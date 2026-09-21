@@ -61,6 +61,8 @@ por `LockService`, exige a **versão** esperada (controle otimista), a exclusão
 - **Resumo do dia**: foco, atrasadas, em UAT e "o que testar hoje".
 - **Seed do planejamento**: 70 tarefas B00–B07 com critérios de aceite e teste
   do dia, idempotente por título.
+- **Relatório por e-mail ao gestor**, em um clique (seção 4.1).
+- **Filtro por bloco** no quadro, que aparece só quando o projeto usa blocos.
 
 ---
 
@@ -118,8 +120,11 @@ clasp run-function visaoGestor
 # Recarregar/completar o planejamento
 clasp run-function carregarPlanejamentoDocfinance
 
-# Dar leitura ao gestor
-clasp run-function darAcessoAoGestor --params '["geovane@altaservicosmedicos.com.br"]'
+# Dar leitura ao gestor (papel VIEWER + leitor da planilha)
+clasp run-function darAcessoAoGestor
+
+# Enviar o relatório de acompanhamento por e-mail ao gestor
+clasp run-function enviarRelatorioAoGestorPadrao
 ```
 
 **Por que `finalizarTarefa` não é só "mover para PRODUÇÃO":** o domínio só
@@ -155,22 +160,44 @@ push sobrescreve a edição feita lá.
 
 ## 4. Como o gestor acompanha
 
+Gestor configurado: **geovane.barbosa@altaservicosmedicos.com.br**.
+
 A visão é **somente leitura por construção**: o papel `VIEWER` faz o servidor
 recusar qualquer escrita, e a página não tem nenhum controle de edição.
 
-**Opção A — pela planilha (imediata, nenhuma configuração):**
-compartilhar a planilha com o Geovane como *Leitor*, e ele usa
-**Kanban → Visão do gestor**.
+### 4.1 Relatório por e-mail (o caminho mais simples)
 
-**Opção B — por link próprio (recomendada):**
+No quadro, botão **"Relatório ao gestor"** (ou menu **Kanban → Enviar
+relatório ao gestor por e-mail**). Pede confirmação e envia na hora.
+
+O e-mail é escrito para quem **não** abre o Kanban: percentual do plano,
+o que está previsto para hoje, como está cada etapa com barra de progresso,
+em que ele está trabalhando agora, o que está travado e o calendário até o
+piloto. Vai em HTML e também em texto puro.
+
+Pelo terminal: `clasp run-function enviarRelatorioAoGestorPadrao`
+
+> O envio é **sempre manual**. Não foi criado nenhum gatilho automático de
+> e-mail: relatório que sai sozinho é relatório que um dia sai errado sem
+> ninguém perceber. Se quiser um envio diário, peça — são duas linhas, mas
+> é uma decisão sua.
+
+### 4.2 Acesso para ele ver o quadro
+
+O Geovane já está cadastrado como `VIEWER` do projeto `DF` no código, então a
+permissão nasce sozinha na primeira execução. Falta só a leitura da planilha:
+
+**Menu Kanban → Dar acesso de leitura ao gestor…** (aceitar o e-mail sugerido).
+Isso concede o papel `VIEWER` **e** adiciona ele como Leitor da planilha.
+
+Pelo terminal: `clasp run-function darAcessoAoGestor`
+
+**Link próprio para ele (opcional, mais confortável que abrir a planilha):**
 
 1. No editor do Apps Script: **Implantar → Nova implantação → App da Web**
    - Executar como: **Usuário que acessa**
    - Quem tem acesso: **Qualquer pessoa do domínio**
-2. Enviar ao gestor a URL terminada em `/exec?view=gestor&projeto=DF`.
-3. Rodar `darAcessoAoGestor` (ou o item de menu) com o e-mail dele.
-4. Compartilhar a planilha com ele como *Leitor* — a implantação roda como o
-   usuário que acessa, então ele precisa conseguir ler a planilha.
+2. Enviar a ele a URL terminada em `/exec?view=gestor&projeto=DF`.
 
 > Não publique como **"Qualquer pessoa"**: o mesmo deployment serve o quadro de
 > operação completo, então abrir o link ao público daria acesso de escrita ao
@@ -211,9 +238,14 @@ clasp run-function resumoDia
 Deve devolver JSON com o checkpoint do dia. Se responder *"Unable to run script
 function"*, algum passo de 5.1–5.3 ficou faltando.
 
-**5.5 — Decisões que dependem de você**
-- E-mail do Geovane para `darAcessoAoGestor` (não foi assumido nenhum).
-- Se quer a Opção B da seção 4 (implantação com link próprio).
+**5.6 — Autorização de envio de e-mail**
+Na primeira vez que você usar o botão "Relatório ao gestor", o Google vai
+pedir para autorizar o envio de e-mail em seu nome (escopo novo no script).
+Aceitar é obrigatório para o relatório funcionar.
+
+**5.7 — Decisões que dependem de você**
+- Se quer a implantação com link próprio para o gestor (seção 4.2).
+- Se quer envio recorrente do relatório (hoje é só manual, de propósito).
 
 ---
 
@@ -224,6 +256,7 @@ function"*, algum passo de 5.1–5.3 ficou faltando.
 | `Config.js` | constantes: colunas, status, cores, listas |
 | `Api.js` | domínio: CRUD, versão, bloqueios, UAT, projetos, auditoria |
 | `Plano.js` | agenda, visão do gestor, resumo do dia, motor do seed |
+| `Relatorio.js` | relatório de acompanhamento por e-mail |
 | `PlanoDocfinance.js` | as 70 tarefas B00–B07 do MVP |
 | `CliPlano.js` | comandos de terminal de alto nível |
 | `CliApi.js` | `cliDispatch`, contrato estrito com versão |
