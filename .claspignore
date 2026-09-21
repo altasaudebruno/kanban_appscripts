@@ -1,6 +1,9 @@
 # O que NÃO sobe para o Apps Script.
 **/.git/**
 **/node_modules/**
+# Scripts Node de apoio (usam require/process): quebrariam no Apps Script.
+ferramentas/**
+**/ferramentas/**
 *.md
 .clasprc.json
 client_secret*.json

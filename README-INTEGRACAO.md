@@ -412,6 +412,10 @@ decisão consciente.
 | `Setup.js` | montagem das abas, fórmulas e auditoria da fundação |
 | `Search.js`, `Inbox.js`, `Automation.js`, `Triggers.js` | busca, captura e automações |
 | `Data.js` | seed legado do projeto `AG` — **neutralizado** (lista vazia) |
+| `ferramentas/validar-paleta.js` | confere o contraste das cores de status; Node, fica fora do `clasp push` |
+
+> O estado do projeto e o que ficou em aberto estão no **`ROADMAP.md`** — comece
+> por ele ao retomar o projeto.
 
 Histórico do git: o commit `baseline` é o clone original, intocado. Toda
 alteração veio depois dele.
