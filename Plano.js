@@ -91,7 +91,7 @@ function getManagerView(projectId, referenceDate) {
       meta: entry.meta,
       total: total,
       pct: total ? Math.round((progress / total) * 100) : 0,
-      state: checkpointState_(entry.date, today, total ? progress / total : 0)
+      state: total === 0 ? 'SEM TAREFAS' : checkpointState_(entry.date, today, progress / total)
     };
   });
 

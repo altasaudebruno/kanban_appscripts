@@ -412,6 +412,10 @@
     <select id="filterResp" onchange="onPreferenceControlChanged_()" aria-label="Filtrar por responsável">
       <option value="">Todos os responsáveis</option>
     </select>
+    <select id="filterBloco" onchange="onPreferenceControlChanged_()" aria-label="Filtrar por bloco"
+            style="display:none">
+      <option value="">Todos os blocos</option>
+    </select>
     <select id="filterPriority" onchange="onPreferenceControlChanged_()" aria-label="Filtrar por prioridade">
       <option value="">Todas as prioridades</option>
       <option value="5">Prioridade 5</option><option value="4">Prioridade 4</option>
@@ -721,7 +725,7 @@
   var PREFERENCES_KEY_PREFIX = 'kanban:preferences:v2:';
   var LAST_PROJECT_KEY = 'kanban:last-project:v1';
   var DEFAULT_PREFERENCES = {
-    theme: 'system', assignee: '', priority: '', flag: '', period: 'this_week',
+    theme: 'system', assignee: '', priority: '', flag: '', bloco: '', period: 'this_week',
     dateFrom: '', dateTo: '', visibleStatuses: [], statusOrder: [], compact: false
   };
   var hadStoredPreferences = false;
@@ -761,6 +765,7 @@
     fillStatic();
     document.getElementById('appTitle').textContent = 'QUADRO KANBAN — ' + String((d.project && d.project.name) || d.projectId || 'CONTROLE ÁGIL').toUpperCase();
     renderProjectSelector_();
+    renderBlocoFilter_();
     initializePreferences_();
     busy(false);
     renderWarnings();
@@ -777,6 +782,34 @@
   function fail(err) {
     busy(false);
     toast((err && err.message) ? err.message : String(err), true);
+  }
+
+  /**
+   * Os blocos são dados, não configuração: a lista vem das tarefas do projeto
+   * atual. Num projeto que não usa blocos, o filtro nem aparece.
+   */
+  function renderBlocoFilter_() {
+    var select = document.getElementById('filterBloco');
+    var blocos = [];
+    (DATA.tasks || []).forEach(function (task) {
+      var bloco = String(task.bloco || '').trim();
+      if (bloco && blocos.indexOf(bloco) === -1) blocos.push(bloco);
+    });
+    blocos.sort();
+    select.style.display = blocos.length ? '' : 'none';
+    var anterior = PREFS.bloco || '';
+    select.innerHTML = '';
+    var todos = document.createElement('option');
+    todos.value = ''; todos.textContent = 'Todos os blocos';
+    select.appendChild(todos);
+    blocos.forEach(function (bloco) {
+      var option = document.createElement('option');
+      option.value = bloco; option.textContent = 'Bloco ' + bloco;
+      select.appendChild(option);
+    });
+    // Um bloco que sumiu do projeto não pode continuar filtrando em silêncio.
+    if (anterior && blocos.indexOf(anterior) === -1) PREFS.bloco = '';
+    select.value = PREFS.bloco || '';
   }
 
   var staticFilled = false;
@@ -1524,6 +1557,7 @@
       }
     }
     setVal('filterResp', PREFS.assignee);
+    setVal('filterBloco', PREFS.bloco || '');
     setVal('filterPriority', PREFS.priority);
     setVal('filterFlag', PREFS.flag);
     setVal('filterPeriod', PREFS.period);
@@ -1543,6 +1577,7 @@
 
   function onPreferenceControlChanged_() {
     PREFS.assignee = getVal('filterResp');
+    PREFS.bloco = getVal('filterBloco');
     PREFS.priority = getVal('filterPriority');
     PREFS.flag = getVal('filterFlag');
     PREFS.period = getVal('filterPeriod');
@@ -1694,10 +1729,12 @@
     PREFS.assignee = '';
     PREFS.priority = '';
     PREFS.flag = '';
+    PREFS.bloco = '';
     PREFS.period = 'all';
     PREFS.dateFrom = '';
     PREFS.dateTo = '';
     setVal('filterResp', '');
+    setVal('filterBloco', '');
     setVal('filterPriority', '');
     setVal('filterFlag', '');
     setVal('filterPeriod', 'all');
@@ -1746,6 +1783,7 @@
     board.innerHTML = '';
     var fResp = document.getElementById('filterResp').value;
     var fPriority = document.getElementById('filterPriority').value;
+    var fBloco = document.getElementById('filterBloco').value;
     var fFlag = document.getElementById('filterFlag').value;
     var q = document.getElementById('search').value.trim().toLowerCase();
 
@@ -1754,6 +1792,7 @@
       if (fResp && fResp !== '__na__' && t.responsavel !== fResp) return false;
       if (fPriority === '__none__' && t.prioridade !== '' && t.prioridade != null) return false;
       if (fPriority && fPriority !== '__none__' && Number(t.prioridade) !== Number(fPriority)) return false;
+      if (fBloco && String(t.bloco || '') !== fBloco) return false;
       if (fFlag === 'blocked' && !t.blocker) return false;
       if (fFlag === 'unblocked' && t.blocker) return false;
       if (fFlag === 'uat_pending' && (!t.uat || t.uat.status !== 'PENDING')) return false;
