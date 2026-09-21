@@ -14,15 +14,14 @@
  * da garantia forte continua usando cliDispatch, que exige `version`.
  */
 
-var CLI_DEFAULT_PROJECT = 'DF';
-
+/**
+ * Projeto do comando. O padrão vem de planDefaultProjectId_ (Plano.js), que já
+ * lê a propriedade de script dentro de try/catch — ler aqui de novo, solto,
+ * derrubaria todo comando de terminal se o acesso às propriedades falhasse.
+ */
 function cliProjectId_(value) {
   var raw = String(value === undefined || value === null ? '' : value).trim();
-  if (!raw) {
-    var stored = PropertiesService.getScriptProperties().getProperty('PLAN_DEFAULT_PROJECT');
-    raw = stored || CLI_DEFAULT_PROJECT;
-  }
-  return normalizeProjectId_(raw);
+  return normalizeProjectId_(raw || planDefaultProjectId_());
 }
 
 function cliArgs_(value) {

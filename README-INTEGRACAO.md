@@ -279,6 +279,39 @@ clasp run-function resumoDia
 Deve devolver JSON com o checkpoint do dia. Se responder *"Unable to run script
 function"*, algum passo de 5.1–5.3 ficou faltando.
 
+**5.5 — Escopos OAuth declarados (leia se `clasp run` der erro de permissão)**
+
+O manifesto passou a declarar `oauthScopes` explicitamente. Antes ele omitia a
+lista, e o Google inferia os escopos só para a autorização feita no navegador —
+o token gerado pelo `clasp` saía **sem a permissão de planilha**, e qualquer
+comando morria em `You do not have permission to call
+SpreadsheetApp.getActive. Required: spreadsheets`.
+
+| Escopo | Por que o código precisa |
+|---|---|
+| `.../auth/spreadsheets` | todo o armazenamento: `SpreadsheetApp.getActive`, leitura e escrita das abas |
+| `.../auth/drive` | `addViewer` em "Dar acesso de leitura ao gestor" (compartilhar a planilha) |
+| `.../auth/script.container.ui` | menu e caixas de diálogo (`SpreadsheetApp.getUi`) |
+| `.../auth/script.scriptapp` | gatilhos da automação (`ScriptApp.newTrigger`, `getProjectTriggers`) |
+| `.../auth/script.send_mail` | relatório por e-mail (`MailApp.sendEmail`) |
+| `.../auth/userinfo.email` | identificar quem está agindo (`Session.getActiveUser`) — é a base de toda a autorização por papel |
+
+> Só o `.../auth/drive` existe por uma funcionalidade de conveniência. Se
+> preferir não conceder acesso amplo ao Drive, remova essa linha do
+> `appsscript.json`: o resto continua funcionando e apenas o
+> "Dar acesso de leitura ao gestor" deixa de compartilhar sozinho — ele avisa
+> para compartilhar a planilha à mão (Compartilhar → Leitor).
+
+**Depois desta mudança, dois passos são obrigatórios:**
+
+1. **Gerar token novo para o `clasp`** — o token atual não tem os escopos:
+   ```bash
+   clasp login --creds caminho/do/client_secret.json --use-project-scopes
+   ```
+2. **Reautorizar no navegador** na primeira vez que abrir o quadro ou usar o
+   menu. A lista de escopos mudou, então o Google vai pedir a permissão de
+   novo. É esperado — aceite.
+
 **5.6 — Autorização de envio de e-mail**
 Na primeira vez que você usar o botão "Relatório ao gestor", o Google vai
 pedir para autorizar o envio de e-mail em seu nome (escopo novo no script).
