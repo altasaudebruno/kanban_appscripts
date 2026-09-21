@@ -199,6 +199,18 @@ Pelo terminal: `clasp run-function darAcessoAoGestor`
    - Quem tem acesso: **Qualquer pessoa do domínio**
 2. Enviar a ele a URL terminada em `/exec?view=gestor&projeto=DF`.
 
+> O acesso da implantação é `DOMAIN` (`appsscript.json`): **só abre para contas
+> `@altaservicosmedicos.com.br`**. O Geovane está nesse domínio, então funciona.
+> Um gestor de fora do domínio receberia 401 mesmo com o papel `VIEWER`.
+
+### 4.3 Qual projeto essas telas mostram
+
+Quando nenhum projeto é informado, a visão do gestor, o relatório e o "Meu dia"
+assumem **`DF`**. Se `DF` ainda não existir, eles mostram o primeiro projeto
+acessível **com um aviso em vermelho dizendo isso** — em vez de exibir os
+números do projeto errado em silêncio. Para trocar o padrão, defina a
+propriedade de script `PLAN_DEFAULT_PROJECT`.
+
 > Não publique como **"Qualquer pessoa"**: o mesmo deployment serve o quadro de
 > operação completo, então abrir o link ao público daria acesso de escrita ao
 > Kanban a quem tivesse a URL. Por isso também não foi criado um endpoint
