@@ -67,6 +67,11 @@
   td.id { font-family: "Roboto Mono", Consolas, monospace; font-size: 12px; color: var(--ink-soft); white-space: nowrap; }
   .tag { font-size: 11px; font-weight: 600; border-radius: 6px; padding: 2px 7px;
          background: var(--panel-2); border: 1px solid var(--line); white-space: nowrap; }
+  /* Chip de etapa com a cor do status vinda do servidor (mesma paleta do
+     quadro). Esta página é sempre escura, então usa a variante escura. */
+  .tag.st { background: var(--st-tint); border-color: var(--st-line); color: var(--st-on); }
+  .st-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+            margin-right: 6px; vertical-align: 1px; }
   .test { color: var(--ink-soft); font-size: 12px; margin-top: 3px; }
   .empty { color: var(--ink-dim); font-size: 13px; padding: 4px 0; }
   .scroll { overflow-x: auto; }
@@ -123,6 +128,27 @@ function dataDeInstante(iso) {
   }
 }
 
+// Paleta de status vinda do servidor (Config.js). Única fonte de cor de etapa.
+var PALETA_STATUS = {};
+
+function indexarPaleta(statuses) {
+  PALETA_STATUS = {};
+  (statuses || []).forEach(function (s) { PALETA_STATUS[s.name] = s; });
+}
+
+/** Chip de etapa na cor do status; cai no estilo neutro se a cor não vier. */
+function chipEtapa(status) {
+  var s = PALETA_STATUS[status];
+  if (!s) return '<span class="tag">' + esc(status) + '</span>';
+  var accent = s.accentDark || s.accent || '#94A3B8';
+  var estilo = '--st-tint:' + (s.tintDark || '#1E293B') +
+    ';--st-on:' + (s.onDark || '#E2E8F0') +
+    ';--st-line:' + accent;
+  return '<span class="tag st" style="' + estilo + '">' +
+    '<span class="st-dot" style="background:' + accent + '"></span>' +
+    esc(status) + '</span>';
+}
+
 var CLASSE_ESTADO = {
   'CONCLUÍDO': 'ok', 'EM ANDAMENTO': 'run', 'PARCIAL': 'run',
   'ATRASADO': 'late', 'HOJE': 'run', 'PREVISTO': 'idle',
@@ -138,6 +164,7 @@ function checkpointClasse(estado) {
 
 function render(view) {
   var html = '';
+  indexarPaleta(view.statuses);
 
   html += '<header><h1>' + esc(view.project.name) + '</h1>' +
     '<span class="badge">somente leitura</span></header>';
@@ -202,7 +229,7 @@ function render(view) {
       html += '<tr><td><strong>' + esc(task.title) + '</strong>' +
         (task.oQueTestar ? '<div class="test">Validação: ' + esc(task.oQueTestar) + '</div>' : '') +
         '</td><td class="id">' + esc(task.bloco || '—') + '</td>' +
-        '<td><span class="tag">' + esc(task.status) + '</span></td>' +
+        '<td>' + chipEtapa(task.status) + '</td>' +
         '<td class="id">' + dataCurta(task.dueDate) + '</td></tr>';
     });
     html += '</tbody></table></div>';

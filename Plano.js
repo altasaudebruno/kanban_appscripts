@@ -173,6 +173,9 @@ function getManagerView(projectId, referenceDate) {
     todayCheckpoint: checkpoints.filter(function (c) { return c.date === today; })[0] || null,
     inFlight: inFlight,
     blocked: blocked,
+    // A paleta viaja junto para a visão do gestor e o relatório usarem a mesma
+    // cor de status do quadro, sem redefinir os tons em cada tela.
+    statuses: board.statuses,
     avisoProjeto: planFallbackAviso_(resolvido),
     lastUpdate: lastUpdate,
     warnings: board.warnings || []

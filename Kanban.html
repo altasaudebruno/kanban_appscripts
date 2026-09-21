@@ -132,38 +132,73 @@
     display: flex; gap: 12px; padding: 14px 16px; flex: 1;
     overflow-x: auto; overflow-y: hidden; align-items: stretch;
   }
+  /* Identidade de cor por status.
+     O JS injeta as duas variantes (clara e escura) como custom properties na
+     coluna; o CSS escolhe qual vale conforme o tema. Assim a mesma regra serve
+     aos dois temas e o card herda a cor do status por cascata, sem JS de tema. */
   .col {
+    --st-accent: var(--st-accent-l);
+    --st-tint: var(--st-tint-l);
+    --st-on: var(--st-on-l);
     flex: 1 1 0; min-width: 230px; display: flex; flex-direction: column;
-    border-radius: 8px; background: var(--surface-subtle); max-height: 100%;
+    border-radius: 8px; max-height: 100%;
+    background: var(--st-tint);
+    border: 1px solid color-mix(in srgb, var(--st-accent) 28%, transparent);
+    overflow: hidden;
+  }
+  :root[data-theme="dark"] .col {
+    --st-accent: var(--st-accent-d);
+    --st-tint: var(--st-tint-d);
+    --st-on: var(--st-on-d);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .col {
+      --st-accent: var(--st-accent-d);
+      --st-tint: var(--st-tint-d);
+      --st-on: var(--st-on-d);
+    }
   }
   .col-head {
     font-weight: 700; font-size: 12.5px; letter-spacing: .4px;
-    padding: 8px 12px 9px; border-radius: 8px 8px 0 0;
-    border-top: 4px solid transparent;
-    display: flex; justify-content: space-between; align-items: center;
+    padding: 9px 12px 10px;
+    border-top: 5px solid var(--st-accent);
+    border-bottom: 1px solid color-mix(in srgb, var(--st-accent) 32%, transparent);
+    background: color-mix(in srgb, var(--st-accent) 16%, var(--surface));
+    color: var(--st-on);
+    display: flex; justify-content: space-between; align-items: center; gap: 8px;
+  }
+  .col-head .st-name { display: flex; align-items: center; gap: 7px; min-width: 0; }
+  .col-head .st-dot {
+    width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0;
+    background: var(--st-accent);
   }
   .col-head .count {
-    background: color-mix(in srgb, currentColor 12%, transparent); border-radius: 10px;
-    font-size: 11px; padding: 1px 9px; font-weight: 600;
+    background: color-mix(in srgb, var(--st-accent) 26%, var(--surface));
+    border: 1px solid color-mix(in srgb, var(--st-accent) 40%, transparent);
+    border-radius: 10px; white-space: nowrap;
+    font-size: 11px; padding: 1px 9px; font-weight: 700;
   }
   .col-body {
     padding: 8px; overflow-y: auto; flex: 1; display: flex;
-    flex-direction: column; gap: 8px; border-radius: 0 0 8px 8px;
+    flex-direction: column; gap: 8px;
+    background: var(--st-tint);
     transition: background .15s;
   }
-  .col-body.dragover { outline: 2px dashed var(--primary); outline-offset: -4px; background: var(--surface-hover) !important; }
+  .col-body.dragover { outline: 2px dashed var(--st-accent); outline-offset: -4px; }
   .col-empty {
     min-height: 84px; padding: 22px 12px; display: grid; place-items: center;
-    border: 1px dashed var(--border-strong); border-radius: 6px;
+    border: 1px dashed color-mix(in srgb, var(--st-accent) 45%, transparent);
+    border-radius: 6px;
     color: var(--muted); font-size: 11.5px; text-align: center;
   }
-  :root[data-theme="dark"] .col-body { background: var(--surface-sunken) !important; }
-  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .col-body { background: var(--surface-sunken) !important; } }
 
   /* ---------- card ---------- */
   .kcard {
-    background: var(--card); border-radius: 4px; box-shadow: var(--shadow);
-    padding: 9px 10px; cursor: grab; border-left: 4px solid transparent;
+    background: var(--card); border-radius: 5px; box-shadow: var(--shadow);
+    padding: 9px 10px 9px 11px; cursor: grab;
+    /* Acento grosso na cor do status: a faixa de 4px antiga quase sumia,
+       principalmente no tema escuro. */
+    border-left: 6px solid var(--st-accent, var(--border-strong));
     user-select: none;
   }
   .kcard:hover { background: var(--surface-hover); }
@@ -196,9 +231,23 @@
   .flow-tags { display: flex; flex-wrap: wrap; gap: 5px; margin: 5px 0; }
   .flow-tag { font-size: 9.5px; font-weight: 700; border-radius: 3px; padding: 2px 6px; }
   .flow-tag.blocked { background: color-mix(in srgb, var(--danger) 18%, var(--surface)); color: var(--danger); }
-  .flow-tag.uat { background: color-mix(in srgb, #008DA6 20%, var(--surface)); color: #008DA6; }
-  .flow-tag.bloco { background: color-mix(in srgb, #1F4E79 16%, var(--surface)); color: #1F4E79;
-                    letter-spacing: .4px; }
+  /* Chip do status: mesma cor da coluna e da borda do card, herdada por cascata.
+     Prioridade usa pill de fundo SÓLIDO; status usa fundo suave com borda —
+     a forma diferente evita que as duas informações se confundam. */
+  .flow-tag.status {
+    background: color-mix(in srgb, var(--st-accent) 20%, var(--surface));
+    border: 1px solid color-mix(in srgb, var(--st-accent) 42%, transparent);
+    color: var(--st-on); letter-spacing: .3px;
+  }
+  .flow-tag.uat {
+    background: color-mix(in srgb, var(--st-accent, #C2410C) 20%, var(--surface));
+    border: 1px solid color-mix(in srgb, var(--st-accent, #C2410C) 42%, transparent);
+    color: var(--st-on, var(--text));
+  }
+  .flow-tag.bloco {
+    background: var(--badge-neutral-bg); color: var(--badge-neutral-text);
+    letter-spacing: .4px;
+  }
   .priority-label { text-transform: uppercase; letter-spacing: .25px; }
   .card-actions {
     display: flex; justify-content: flex-end; gap: 5px; padding-top: 7px; margin-top: 7px;
@@ -1851,21 +1900,20 @@
       var col = document.createElement('section');
       col.className = 'col';
       col.setAttribute('aria-label', 'Etapa ' + s.name);
+      applyStatusPalette_(col, s);
 
       var head = document.createElement('h2');
       head.className = 'col-head';
-      head.style.background = s.light;
-      // A cor oficial do status é a base; o leve escurecimento mantém DEV acima de 4,5:1.
-      head.style.color = 'color-mix(in srgb, ' + s.font + ' 82%, #000)';
-      head.style.borderTopColor = s.header;
       var inCol = visible.filter(function (t) { return t.status === s.name; })
                          .sort(function (a, b) { return sortKey(a) - sortKey(b); });
-      head.innerHTML = '<span>' + esc(s.name) + '</span><span class="count">' + inCol.length + ' tarefa(s)</span>';
+      head.innerHTML =
+        '<span class="st-name"><span class="st-dot" aria-hidden="true"></span>' +
+        esc(s.name) + '</span>' +
+        '<span class="count">' + inCol.length + ' tarefa(s)</span>';
       col.appendChild(head);
 
       var body = document.createElement('div');
       body.className = 'col-body';
-      body.style.background = s.light;
       body.dataset.status = s.name;
       body.setAttribute('role', inCol.length ? 'list' : 'status');
       body.setAttribute('aria-label', 'Tarefas em ' + s.name);
@@ -1956,6 +2004,25 @@
   function todayIso_() { return localIso_(new Date()); }
   function pad2_(value) { return value < 10 ? '0' + value : String(value); }
 
+  /**
+   * Publica a paleta do status no elemento. As duas variantes vão juntas; o
+   * CSS escolhe a do tema vigente, então trocar claro/escuro não exige
+   * redesenhar o quadro.
+   */
+  function applyStatusPalette_(el, s) {
+    if (!el || !s) return;
+    el.style.setProperty('--st-accent-l', s.accent || s.header || '#7A869A');
+    el.style.setProperty('--st-accent-d', s.accentDark || s.accent || s.header || '#7A869A');
+    el.style.setProperty('--st-tint-l', s.light || 'var(--surface-subtle)');
+    el.style.setProperty('--st-tint-d', s.tintDark || 'var(--surface-sunken)');
+    el.style.setProperty('--st-on-l', s.font || 'var(--text)');
+    el.style.setProperty('--st-on-d', s.onDark || 'var(--text)');
+  }
+
+  function statusByName_(name) {
+    return (DATA.statuses || []).filter(function (s) { return s.name === name; })[0] || null;
+  }
+
   function cardEl(t, s) {
     var el = document.createElement('article');
     el.className = 'kcard' + (t.blocker ? ' blocked' : '') + (t._pending ? ' pending' : '');
@@ -1965,7 +2032,10 @@
     el.setAttribute('aria-busy', String(!!t._pending));
     el.draggable = t.status !== 'UAT' && !t._pending;
     if (t.status === 'UAT') el.title = 'Use Aprovar ou Reprovar UAT para sair desta etapa.';
-    el.style.borderLeftColor = s.header;
+    // O card é criado antes de entrar na coluna, então não dá para depender da
+    // herança: ele publica a própria paleta e funciona igual na lixeira, onde
+    // não existe coluna acima dele.
+    applyStatusPalette_(el, s || statusByName_(t.status));
 
     var pc = DATA.priorityColors[t.prioridade];
     var badgeBg = pc ? pc[0] : 'var(--badge-neutral-bg)';
@@ -1981,7 +2051,7 @@
     var dueHtml = t.dueDate
       ? '<div class="due' + (isOverdue_(t) ? ' overdue' : '') + '">Prazo: ' + esc(formatShortDate_(t.dueDate)) + (isOverdue_(t) ? ' · atrasada' : '') + '</div>'
       : '<div class="due">Sem prazo</div>';
-    var flowTags = '';
+    var flowTags = '<span class="flow-tag status">' + esc(t.status) + '</span>';
     if (t.bloco) flowTags += '<span class="flow-tag bloco">' + esc(t.bloco) + '</span>';
     if (t.blocker) flowTags += '<span class="flow-tag blocked">BLOQUEADA</span>';
     if (t.uat && t.uat.status === 'PENDING') flowTags += '<span class="flow-tag uat">UAT PENDENTE</span>';

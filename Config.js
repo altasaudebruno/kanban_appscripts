@@ -25,14 +25,39 @@ var SHEETS = {
 // projeto explícito mirar um projeto que não existe mais.
 var DEFAULT_PROJECT_ID = 'DF';
 
-// Ordem oficial das colunas do quadro (mesma do Excel).
+/**
+ * Ordem oficial das colunas do quadro e FONTE ÚNICA de cor de status.
+ * Consumida pela planilha (Setup.js), pelo quadro (Kanban.html), pela visão do
+ * gestor (Gestor.html) e pelo relatório por e-mail (Relatorio.js).
+ *
+ * Campos, e por que existe cada um:
+ *   header  fundo do cabeçalho na aba KANBAN, sempre com texto BRANCO por cima
+ *   light   fundo claro (formatação condicional da planilha e coluna no tema claro)
+ *   font    texto sobre `light`
+ *   accent  cor viva no tema CLARO: borda do card, faixa e chip. Escurecida o
+ *           bastante para a borda alcançar 3:1 sobre card branco — um tom
+ *           puro como #F59E0B dava 2,1:1 e sumia, que era a queixa da
+ *           "mini linha" apagada
+ *   accentDark / tintDark / onDark  os equivalentes do tema ESCURO, onde a
+ *           mesma cor precisa clarear em vez de escurecer
+ *
+ * Todos os pares texto/fundo foram verificados em 4,5:1 e as bordas em 3:1,
+ * nos dois temas. Nenhum accent se aproxima das cores de PRIORITY_COLORS, para
+ * que status e prioridade não se confundam no mesmo card.
+ */
 var STATUSES = [
-  { name: 'BACKLOG',       header: '#808080', light: '#F2F2F2', font: '#404040' },
-  { name: 'NÃO-INICIADO',  header: '#4472C4', light: '#DDEBF7', font: '#1F4E79' },
-  { name: 'DEV',           header: '#ED7D31', light: '#FCE4D6', font: '#C55A11' },
-  { name: 'DEVMERGE',      header: '#7030A0', light: '#E8DFF0', font: '#5B2B86' },
-  { name: 'UAT',           header: '#008DA6', light: '#DDEFF2', font: '#006577' },
-  { name: 'PRODUÇÃO',      header: '#548235', light: '#E2EFDA', font: '#375623' }
+  { name: 'BACKLOG',       header: '#526270', light: '#EDF0F4', font: '#37434F',
+    accent: '#52637A', accentDark: '#94A3B8', tintDark: '#1E293B', onDark: '#CBD5E1' },
+  { name: 'NÃO-INICIADO',  header: '#A16207', light: '#FEF3C7', font: '#854D0E',
+    accent: '#A16207', accentDark: '#FDE047', tintDark: '#3A2C08', onDark: '#FCD34D' },
+  { name: 'DEV',           header: '#1D4ED8', light: '#DBEAFE', font: '#1E40AF',
+    accent: '#1D4ED8', accentDark: '#60A5FA', tintDark: '#16294F', onDark: '#93C5FD' },
+  { name: 'DEVMERGE',      header: '#6D28D9', light: '#EDE9FE', font: '#5B21B6',
+    accent: '#6D28D9', accentDark: '#A78BFA', tintDark: '#2C1C54', onDark: '#C4B5FD' },
+  { name: 'UAT',           header: '#C2410C', light: '#FFEDD5', font: '#9A3412',
+    accent: '#EA580C', accentDark: '#FB923C', tintDark: '#41210A', onDark: '#FDBA74' },
+  { name: 'PRODUÇÃO',      header: '#15803D', light: '#DCFCE7', font: '#14532D',
+    accent: '#15803D', accentDark: '#4ADE80', tintDark: '#14331F', onDark: '#86EFAC' }
 ];
 
 // Prioridade → [fundo, fonte] (formatação condicional da coluna E).

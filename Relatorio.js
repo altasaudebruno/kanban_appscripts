@@ -115,6 +115,24 @@ function relRotulo_(estado) { return REL_ROTULOS[estado] || estado; }
 function relCor_(estado) { return REL_CORES[estado] || '#64748b'; }
 function relEtapa_(status) { return REL_ETAPAS[status] || String(status || '').toLowerCase(); }
 
+/**
+ * Chip de etapa na cor do status, usando a paleta que veio com a view — a
+ * mesma do quadro e da visão do gestor. Cliente de e-mail não lê custom
+ * properties nem <style>, então o estilo vai inline e na variante CLARA,
+ * que é o fundo do e-mail.
+ */
+function relChipEtapa_(statuses, status) {
+  var s = null;
+  (statuses || []).forEach(function (item) { if (item.name === status) s = item; });
+  var texto = relEsc_(relEtapa_(status));
+  if (!s) return '<span style="color:#64748b">' + texto + '</span>';
+  return '<span style="display:inline-block;background:' + (s.light || '#F1F5F9') +
+    ';color:' + (s.font || '#334155') +
+    ';border:1px solid ' + (s.accent || '#94A3B8') +
+    ';border-radius:999px;padding:1px 9px;font-size:11.5px;font-weight:700">' +
+    texto + '</span>';
+}
+
 function relEsc_(value) {
   return String(value === undefined || value === null ? '' : value)
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -250,8 +268,9 @@ function montarRelatorioHtml_(view, teste) {
       h.push('<div style="padding:11px 0;border-top:1px solid #e2e8f0">' +
         '<div style="font-size:14px;color:#0f172a;line-height:1.45">' +
         relEsc_(task.title) + '</div>' +
-        '<div style="font-size:12px;color:#64748b;margin-top:3px">' +
-        relEsc_(task.bloco || 'sem etapa') + ' · ' + relEsc_(relEtapa_(task.status)) +
+        '<div style="font-size:12px;color:#64748b;margin-top:5px">' +
+        relChipEtapa_(view.statuses, task.status) + ' &nbsp;' +
+        relEsc_(task.bloco || 'sem etapa') +
         (task.dueDate ? ' · previsto para ' + relEsc_(relDataCurta_(task.dueDate)) : '') +
         '</div></div>');
     });
