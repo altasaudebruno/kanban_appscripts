@@ -29,9 +29,18 @@
        font-weight: 650; margin: 32px 0 12px; }
   .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
 
+  /* Frase de abertura: responde "onde o projeto está" antes de qualquer tabela. */
+  .lede { background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--run);
+          border-radius: 12px; padding: 16px 18px; margin-bottom: 18px; }
+  .lede-frase { font-size: 17px; font-weight: 600; line-height: 1.45; letter-spacing: -0.01em; }
+  .lede-meta { margin-top: 10px; font-size: 13px; color: var(--ink-soft); line-height: 1.5; }
+  .lede-rot { display: block; font-size: 10.5px; text-transform: uppercase; letter-spacing: .09em;
+              color: var(--ink-dim); font-weight: 650; margin-bottom: 3px; }
+
   .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
   .kpi { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
   .kpi .n { font-size: 26px; font-weight: 650; letter-spacing: -0.02em; }
+  .kpi .n .de { font-size: 15px; font-weight: 500; color: var(--ink-soft); }
   .kpi .l { font-size: 12px; color: var(--ink-soft); }
 
   .timeline { display: grid; grid-template-columns: repeat(auto-fit, minmax(128px, 1fr)); gap: 8px; }
@@ -48,14 +57,46 @@
   .cp.HOJE .meta { display: block; color: var(--ink); }
 
   .blocks { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px; }
-  .block { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+  /* --et é a cor da etapa em que o bloco está, vinda da paleta do Config.js. */
+  .block { background: var(--panel); border: 1px solid var(--line);
+           border-top: 3px solid var(--et, var(--run));
+           border-radius: 12px; padding: 14px 16px; }
   .block .top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
-  .block .id { font-weight: 650; font-size: 15px; }
-  .block .pct { font-variant-numeric: tabular-nums; font-weight: 650; }
-  .bar { height: 6px; border-radius: 999px; background: var(--panel-2); margin: 10px 0 8px; overflow: hidden; }
-  .bar > i { display: block; height: 100%; background: var(--run); border-radius: 999px; }
-  .block.done .bar > i { background: var(--ok); }
+  .block .id { font-weight: 650; font-size: 15px; letter-spacing: .02em; }
+  .block .pct { font-variant-numeric: tabular-nums; font-weight: 700; font-size: 28px;
+                letter-spacing: -0.03em; color: var(--et, var(--ink)); line-height: 1; }
+  .block .pct small { font-size: 14px; font-weight: 600; margin-left: 1px; }
+  .bar { height: 8px; border-radius: 999px; background: var(--panel-2); margin: 11px 0 9px; overflow: hidden; }
+  .bar > i { display: block; height: 100%; background: var(--et, var(--run)); border-radius: 999px; }
   .block .line { font-size: 12px; color: var(--ink-soft); }
+  .block .line.soft { color: var(--ink-dim); margin-top: 2px; }
+  .block .b-etapa { color: var(--et, var(--ink)); font-weight: 650; font-size: 12.5px; margin-bottom: 1px; }
+
+  /* Etapas que ainda não começaram: presentes, mas sem competir por atenção. */
+  .waiting { padding: 12px 16px 14px; margin-top: 12px; }
+  .waiting-rot { font-size: 10.5px; text-transform: uppercase; letter-spacing: .09em;
+                 color: var(--ink-dim); font-weight: 650; margin-bottom: 6px; }
+  .waiting-row { display: flex; justify-content: space-between; gap: 10px;
+                 padding: 5px 0; border-top: 1px solid var(--line); font-size: 13px; }
+  .waiting-row:first-of-type { border-top: none; }
+  .waiting-row .id { color: var(--ink-soft); font-weight: 600; }
+  .waiting-n { color: var(--ink-dim); font-size: 12px; }
+
+  /* Lista de itens: título em destaque, código e prazo como apoio. */
+  .itens { padding: 4px 16px 6px; }
+  .item { padding: 13px 0 14px; border-top: 1px solid var(--line);
+          border-left: 3px solid var(--et, transparent); padding-left: 12px; margin-left: -16px;
+          padding-right: 16px; }
+  .item:first-child { border-top: none; }
+  .item-topo { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .item-cod { font-family: "Roboto Mono", Consolas, monospace; font-size: 11px;
+              color: var(--ink-dim); font-weight: 600; letter-spacing: .02em; }
+  .item-prazo { font-size: 11.5px; color: var(--ink-dim); }
+  .item-titulo { font-size: 15px; line-height: 1.4; font-weight: 550; color: var(--ink); }
+  .item.travada { border-left-color: var(--late); }
+  .test-rot { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: .08em;
+              color: var(--ink-dim); font-weight: 650; margin-bottom: 2px; }
+  .motivo { color: var(--late); }
   .state { font-size: 10.5px; text-transform: uppercase; letter-spacing: .07em; font-weight: 650; }
   .state.ok { color: var(--ok); } .state.run { color: var(--run); }
   .state.late { color: var(--late); } .state.idle { color: var(--ink-dim); }
@@ -72,7 +113,7 @@
   .tag.st { background: var(--st-tint); border-color: var(--st-line); color: var(--st-on); }
   .st-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%;
             margin-right: 6px; vertical-align: 1px; }
-  .test { color: var(--ink-soft); font-size: 12px; margin-top: 3px; }
+  .test { color: var(--ink-soft); font-size: 12.5px; margin-top: 8px; line-height: 1.5; }
   .empty { color: var(--ink-dim); font-size: 13px; padding: 4px 0; }
   .scroll { overflow-x: auto; }
   footer { margin-top: 36px; color: var(--ink-dim); font-size: 12px; border-top: 1px solid var(--line); padding-top: 12px; }
@@ -115,6 +156,60 @@ function dataHora(iso) {
   }
 }
 
+/** Data (yyyy-MM-dd) de um instante UTC, já no fuso do projeto. */
+function diaLocal(iso) {
+  var data = new Date(String(iso || ''));
+  if (isNaN(data.getTime())) return '';
+  try {
+    var p = new Intl.DateTimeFormat('en-CA', {
+      timeZone: FUSO, year: 'numeric', month: '2-digit', day: '2-digit'
+    }).format(data);
+    return p;
+  } catch (ignored) {
+    return String(iso).slice(0, 10);
+  }
+}
+
+function somarDias(isoDate, dias) {
+  var p = String(isoDate || '').split('-');
+  if (p.length !== 3) return '';
+  var d = new Date(Date.UTC(Number(p[0]), Number(p[1]) - 1, Number(p[2]) + dias));
+  return d.toISOString().slice(0, 10);
+}
+
+/**
+ * "hoje às 19h04" / "ontem às 08h12" / "18/09 às 15h30".
+ * Data absoluta obriga o leitor a calcular quanto tempo faz; a relativa
+ * responde na hora, que é o que o gestor quer saber.
+ */
+function quando(iso, hoje) {
+  var texto = String(iso || '');
+  if (!/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}/.test(texto)) return 'sem registro';
+  var data = new Date(texto);
+  if (isNaN(data.getTime())) return 'sem registro';
+  var hora;
+  try {
+    hora = data.toLocaleTimeString('pt-BR', {
+      timeZone: FUSO, hour: '2-digit', minute: '2-digit'
+    }).replace(':', 'h');
+  } catch (ignored) {
+    hora = texto.slice(11, 16).replace(':', 'h');
+  }
+  var dia = diaLocal(texto);
+  var ref = String(hoje || '').slice(0, 10);
+  if (dia && ref) {
+    if (dia === ref) return 'hoje às ' + hora;
+    if (dia === somarDias(ref, -1)) return 'ontem às ' + hora;
+  }
+  return dataDeInstante(texto) + ' às ' + hora;
+}
+
+/** Cor da etapa, vinda da paleta única; esta página é sempre escura. */
+function corDaEtapa(status) {
+  var s = PALETA_STATUS[status];
+  return (s && (s.accentDark || s.accent)) || '#94A3B8';
+}
+
 /** Data de um instante em UTC, já no fuso do projeto. */
 function dataDeInstante(iso) {
   var texto = String(iso || '');
@@ -136,17 +231,23 @@ function indexarPaleta(statuses) {
   (statuses || []).forEach(function (s) { PALETA_STATUS[s.name] = s; });
 }
 
-/** Chip de etapa na cor do status; cai no estilo neutro se a cor não vier. */
+/**
+ * Chip de etapa com o nome em português corrente (campo `gestor` do
+ * Config.js). "DEVMERGE" e "UAT" não dizem nada para quem acompanha de fora;
+ * o nome técnico fica só no title, para quando alguém precisar cruzar com o
+ * quadro.
+ */
 function chipEtapa(status) {
   var s = PALETA_STATUS[status];
-  if (!s) return '<span class="tag">' + esc(status) + '</span>';
+  var rotulo = (s && s.gestor) || status;
+  if (!s) return '<span class="tag">' + esc(rotulo) + '</span>';
   var accent = s.accentDark || s.accent || '#94A3B8';
   var estilo = '--st-tint:' + (s.tintDark || '#1E293B') +
     ';--st-on:' + (s.onDark || '#E2E8F0') +
     ';--st-line:' + accent;
-  return '<span class="tag st" style="' + estilo + '">' +
+  return '<span class="tag st" style="' + estilo + '" title="' + esc(status) + '">' +
     '<span class="st-dot" style="background:' + accent + '"></span>' +
-    esc(status) + '</span>';
+    esc(rotulo) + '</span>';
 }
 
 var CLASSE_ESTADO = {
@@ -168,29 +269,31 @@ function render(view) {
 
   html += '<header><h1>' + esc(view.project.name) + '</h1>' +
     '<span class="badge">somente leitura</span></header>';
-  html += '<p class="sub">Andamento de ' + esc(view.project.id) + ' em ' + dataCurta(view.today) +
-    (view.goLive ? ' · piloto em ' + dataCurta(view.goLive) : '') +
-    ' · última movimentação ' + dataHora(view.lastUpdate) + '</p>';
+  html += '<p class="sub">Situação em ' + esc(dataCurta(view.today)) +
+    ' · última atividade ' + esc(quando(view.lastUpdate, view.today)) + '</p>';
 
   if (view.avisoProjeto) {
     html += '<div class="err" style="margin-bottom:18px">' + esc(view.avisoProjeto) + '</div>';
   }
 
+  // Onde o projeto está, em uma frase, antes de qualquer tabela.
+  if (view.resumo && view.resumo.frase) {
+    html += '<div class="lede"><div class="lede-frase">' + esc(view.resumo.frase) + '</div>' +
+      (view.resumo.metaDoDia
+        ? '<div class="lede-meta"><span class="lede-rot">Previsto para hoje</span>' +
+          esc(view.resumo.metaDoDia) + '</div>'
+        : '') +
+      '</div>';
+  }
+
   var t = view.totals;
   html += '<div class="kpis">' +
     '<div class="kpi"><div class="n">' + t.pct + '%</div><div class="l">do plano concluído</div></div>' +
-    '<div class="kpi"><div class="n">' + t.done + ' / ' + t.total + '</div><div class="l">tarefas em produção</div></div>' +
+    '<div class="kpi"><div class="n">' + t.done + ' <span class="de">de ' + t.total + '</span></div>' +
+    '<div class="l">tarefas entregues</div></div>' +
     '<div class="kpi"><div class="n">' + view.inFlight.length + '</div><div class="l">em andamento agora</div></div>' +
-    '<div class="kpi"><div class="n">' + view.blocked.length + '</div><div class="l">bloqueadas</div></div>' +
+    '<div class="kpi"><div class="n">' + view.blocked.length + '</div><div class="l">travadas</div></div>' +
     '</div>';
-
-  if (view.todayCheckpoint) {
-    html += '<h2>Onde ele está hoje</h2><div class="panel">' +
-      '<strong>' + esc(view.todayCheckpoint.label) + ' · ' +
-      esc(view.todayCheckpoint.blocks.join(' + ')) + '</strong>' +
-      '<div class="line" style="margin-top:4px;color:var(--ink-soft)">' +
-      esc(view.todayCheckpoint.meta) + '</div></div>';
-  }
 
   if (view.checkpoints.length) {
     html += '<h2>Agenda até o piloto</h2><div class="timeline">';
@@ -205,50 +308,87 @@ function render(view) {
     html += '</div>';
   }
 
-  html += '<h2>Progresso por bloco</h2><div class="blocks">';
-  view.blocks.forEach(function (b) {
-    html += '<div class="block' + (b.state === 'CONCLUÍDO' ? ' done' : '') + '">' +
-      '<div class="top"><span class="id">' + esc(b.id) + '</span>' +
-      '<span class="pct">' + b.pct + '%</span></div>' +
-      '<div class="bar"><i style="width:' + Math.max(b.pct, 1) + '%"></i></div>' +
-      '<div class="line"><span class="state ' + (CLASSE_ESTADO[b.state] || 'idle') + '">' +
-      esc(b.state) + '</span> · ' + b.done + ' de ' + b.total + ' concluídas' +
-      (b.blocked ? ' · <span class="state late">' + b.blocked + ' bloqueada(s)</span>' : '') + '</div>' +
-      '<div class="line">' + (b.lastUpdate
-        ? 'mexido em ' + dataHora(b.lastUpdate)
-        : 'nenhuma movimentação registrada') + '</div>' +
-      '</div>';
+  // Seis linhas "Não iniciado · 0 de N" viram ruído e escondem o que importa.
+  // As etapas que já andaram ganham cartão; as que não começaram viram uma
+  // lista compacta no fim, sem sumir do retrato.
+  var ativas = view.blocks.filter(function (b) {
+    return b.total && (b.done || b.inFlight.length || b.pct > 0);
   });
-  html += '</div>';
+  var paradas = view.blocks.filter(function (b) { return ativas.indexOf(b) === -1; });
 
-  html += '<h2>Em andamento agora</h2>';
-  if (view.inFlight.length) {
-    html += '<div class="panel scroll"><table><thead><tr><th>Tarefa</th><th>Bloco</th>' +
-      '<th>Etapa</th><th>Prazo</th></tr></thead><tbody>';
-    view.inFlight.forEach(function (task) {
-      html += '<tr><td><strong>' + esc(task.title) + '</strong>' +
-        (task.oQueTestar ? '<div class="test">Validação: ' + esc(task.oQueTestar) + '</div>' : '') +
-        '</td><td class="id">' + esc(task.bloco || '—') + '</td>' +
-        '<td>' + chipEtapa(task.status) + '</td>' +
-        '<td class="id">' + dataCurta(task.dueDate) + '</td></tr>';
+  html += '<h2>Como está cada etapa</h2>';
+  if (ativas.length) {
+    html += '<div class="blocks">';
+    ativas.forEach(function (b) {
+      var cor = corDaEtapa(b.statusDominante);
+      html += '<div class="block' + (b.state === 'CONCLUÍDO' ? ' done' : '') +
+        '" style="--et:' + cor + '">' +
+        '<div class="top"><span class="id">' + esc(b.id) + '</span>' +
+        '<span class="pct">' + b.pct + '<small>%</small></span></div>' +
+        '<div class="bar"><i style="width:' + Math.max(b.pct, 2) + '%"></i></div>' +
+        '<div class="line b-etapa">' + (b.state === 'CONCLUÍDO'
+          ? '<span class="state ok">Etapa concluída</span>'
+          : esc(b.etapa || 'A iniciar')) +
+        '</div>' +
+        '<div class="line">' + b.done + ' de ' + b.total + ' entregues' +
+        (b.blocked ? ' · <span class="state late">' + b.blocked + ' travada(s)</span>' : '') +
+        '</div>' +
+        '<div class="line soft">' + (b.lastUpdate
+          ? 'última atividade: ' + esc(quando(b.lastUpdate, view.today))
+          : 'ainda sem atividade') + '</div>' +
+        '</div>';
     });
-    html += '</tbody></table></div>';
+    html += '</div>';
+  }
+
+  if (paradas.length) {
+    html += '<div class="panel waiting"><div class="waiting-rot">Ainda não começaram</div>';
+    paradas.forEach(function (b) {
+      html += '<div class="waiting-row"><span class="id">' + esc(b.id) + '</span>' +
+        '<span class="waiting-n">' + (b.total ? b.total + ' tarefa(s)' : 'sem tarefas') + '</span></div>';
+    });
+    html += '</div>';
+  }
+
+  html += '<h2>Em que ele está trabalhando agora</h2>';
+  if (view.inFlight.length) {
+    html += '<div class="panel itens">';
+    view.inFlight.forEach(function (task) {
+      html += '<div class="item" style="--et:' + corDaEtapa(task.status) + '">' +
+        '<div class="item-topo">' +
+        (task.codigo ? '<span class="item-cod">' + esc(task.codigo) + '</span>' : '') +
+        chipEtapa(task.status) +
+        (task.dueDate ? '<span class="item-prazo">previsto para ' +
+          esc(dataCurta(task.dueDate)) + '</span>' : '') +
+        '</div>' +
+        '<div class="item-titulo">' + esc(task.titulo || task.title) + '</div>' +
+        (task.oQueTestar
+          ? '<div class="test"><span class="test-rot">Como saber que ficou pronto</span>' +
+            esc(task.oQueTestar) + '</div>'
+          : '') +
+        '</div>';
+    });
+    html += '</div>';
   } else {
-    html += '<div class="panel"><div class="empty">Nenhuma tarefa em DEV, DEVMERGE ou UAT neste momento.</div></div>';
+    html += '<div class="panel"><div class="empty">Nada em andamento neste momento.</div></div>';
   }
 
   if (view.blocked.length) {
-    html += '<h2>Bloqueios</h2><div class="panel scroll"><table><thead><tr>' +
-      '<th>Tarefa</th><th>Motivo</th><th>Desde</th></tr></thead><tbody>';
+    html += '<h2>Esperando resposta para destravar</h2><div class="panel itens">';
     view.blocked.forEach(function (item) {
-      html += '<tr><td><strong>' + esc(item.title) + '</strong> <span class="id">' +
-        esc(item.bloco || '') + '</span></td><td>' + esc(item.reason) + '</td>' +
-        '<td class="id">' + dataDeInstante(item.since) + '</td></tr>';
+      html += '<div class="item travada">' +
+        '<div class="item-topo">' +
+        (item.bloco ? '<span class="item-cod">' + esc(item.bloco) + '</span>' : '') +
+        '<span class="item-prazo">parada desde ' + esc(dataDeInstante(item.since)) + '</span>' +
+        '</div>' +
+        '<div class="item-titulo">' + esc(item.title) + '</div>' +
+        '<div class="test motivo">' + esc(item.reason) + '</div>' +
+        '</div>';
     });
-    html += '</tbody></table></div>';
+    html += '</div>';
   }
 
-  html += '<footer>Retrato gerado em ' + dataHora(view.generatedAt) +
+  html += '<footer>Retrato gerado em ' + esc(quando(view.generatedAt, view.today)) +
     '. Esta página não altera nada no quadro: é um espelho de leitura.</footer>';
 
   document.getElementById('app').innerHTML = html;

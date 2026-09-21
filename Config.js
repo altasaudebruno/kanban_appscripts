@@ -47,18 +47,36 @@ var DEFAULT_PROJECT_ID = 'DF';
  */
 var STATUSES = [
   { name: 'BACKLOG',       header: '#526270', light: '#EDF0F4', font: '#37434F',
-    accent: '#52637A', accentDark: '#94A3B8', tintDark: '#1E293B', onDark: '#CBD5E1' },
+    accent: '#52637A', accentDark: '#94A3B8', tintDark: '#1E293B', onDark: '#CBD5E1',
+    gestor: 'Na fila' },
   { name: 'NÃO-INICIADO',  header: '#A16207', light: '#FEF3C7', font: '#854D0E',
-    accent: '#A16207', accentDark: '#FDE047', tintDark: '#3A2C08', onDark: '#FCD34D' },
+    accent: '#A16207', accentDark: '#FDE047', tintDark: '#3A2C08', onDark: '#FCD34D',
+    gestor: 'A iniciar' },
   { name: 'DEV',           header: '#1D4ED8', light: '#DBEAFE', font: '#1E40AF',
-    accent: '#1D4ED8', accentDark: '#60A5FA', tintDark: '#16294F', onDark: '#93C5FD' },
+    accent: '#1D4ED8', accentDark: '#60A5FA', tintDark: '#16294F', onDark: '#93C5FD',
+    gestor: 'Em desenvolvimento' },
   { name: 'DEVMERGE',      header: '#6D28D9', light: '#EDE9FE', font: '#5B21B6',
-    accent: '#6D28D9', accentDark: '#A78BFA', tintDark: '#2C1C54', onDark: '#C4B5FD' },
+    accent: '#6D28D9', accentDark: '#A78BFA', tintDark: '#2C1C54', onDark: '#C4B5FD',
+    gestor: 'Pronto, aguardando validação' },
   { name: 'UAT',           header: '#C2410C', light: '#FFEDD5', font: '#9A3412',
-    accent: '#EA580C', accentDark: '#FB923C', tintDark: '#41210A', onDark: '#FDBA74' },
+    accent: '#EA580C', accentDark: '#FB923C', tintDark: '#41210A', onDark: '#FDBA74',
+    gestor: 'Em validação final' },
   { name: 'PRODUÇÃO',      header: '#15803D', light: '#DCFCE7', font: '#14532D',
-    accent: '#15803D', accentDark: '#4ADE80', tintDark: '#14331F', onDark: '#86EFAC' }
+    accent: '#15803D', accentDark: '#4ADE80', tintDark: '#14331F', onDark: '#86EFAC',
+    gestor: 'Entregue' }
 ];
+
+/**
+ * `gestor` é o nome da etapa em português corrente, para quem acompanha de
+ * fora: BACKLOG/DEVMERGE/UAT não querem dizer nada para o gestor. O nome
+ * técnico continua sendo a chave e segue valendo no quadro de operação.
+ */
+function statusLabelGestor_(name) {
+  for (var i = 0; i < STATUSES.length; i++) {
+    if (STATUSES[i].name === name) return STATUSES[i].gestor || STATUSES[i].name;
+  }
+  return String(name || '');
+}
 
 // Prioridade → [fundo, fonte] (formatação condicional da coluna E).
 var PRIORITY_COLORS = {

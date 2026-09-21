@@ -176,10 +176,94 @@ function getManagerView(projectId, referenceDate) {
     // A paleta viaja junto para a visão do gestor e o relatório usarem a mesma
     // cor de status do quadro, sem redefinir os tons em cada tela.
     statuses: board.statuses,
+    resumo: planResumoTopo_(blocks, tasks, today, agenda, checkpoints),
     avisoProjeto: planFallbackAviso_(resolvido),
     lastUpdate: lastUpdate,
     warnings: board.warnings || []
   };
+}
+
+/**
+ * Uma frase que responde "onde o projeto está" sem obrigar o leitor a
+ * interpretar tabela: bloco em foco, quanto dele já está de pé, quantos itens
+ * dependem de validação e quanto falta para o piloto.
+ */
+function planResumoTopo_(blocks, tasks, today, agenda, checkpoints) {
+  var checkpointHoje = checkpoints.filter(function (c) { return c.date === today; })[0] || null;
+  var porId = {};
+  blocks.forEach(function (b) { porId[b.id] = b; });
+
+  // Foco: o bloco do checkpoint de hoje que ainda não fechou; senão, o bloco
+  // em andamento mais adiantado; senão, o primeiro que ainda tem o que fazer.
+  var foco = null;
+  if (checkpointHoje) {
+    checkpointHoje.blocks.forEach(function (id) {
+      var b = porId[id];
+      if (!b || !b.total) return;
+      if (!foco || b.pct < foco.pct) foco = b;
+    });
+  }
+  if (!foco) {
+    blocks.forEach(function (b) {
+      if (!b.total || b.state === 'CONCLUÍDO') return;
+      if (b.inFlight.length && (!foco || b.pct > foco.pct)) foco = b;
+    });
+  }
+  if (!foco) {
+    blocks.forEach(function (b) {
+      if (!foco && b.total && b.state !== 'CONCLUÍDO') foco = b;
+    });
+  }
+
+  var aguardando = tasks.filter(function (t) {
+    return t.status === 'UAT' || t.status === 'DEVMERGE';
+  }).length;
+  var dias = planDiasEntre_(today, agenda ? agenda.goLive : '');
+
+  var partes = [];
+  if (foco) {
+    partes.push(foco.id + ' ' + planQualificador_(foco.pct) + ' (' + foco.pct + '%)');
+  } else if (blocks.length) {
+    partes.push('Todas as etapas concluídas');
+  }
+  if (aguardando) {
+    partes.push(aguardando + (aguardando === 1 ? ' item aguardando' : ' itens aguardando') + ' validação');
+  }
+  if (dias !== null) {
+    partes.push(dias > 1 ? 'piloto em ' + dias + ' dias'
+      : dias === 1 ? 'piloto amanhã'
+      : dias === 0 ? 'piloto é hoje'
+      : 'piloto era há ' + Math.abs(dias) + ' dia(s)');
+  }
+
+  return {
+    frase: partes.join(' · '),
+    blocoFoco: foco ? foco.id : '',
+    pctFoco: foco ? foco.pct : 0,
+    etapaFoco: foco ? (foco.etapa || '') : '',
+    aguardandoValidacao: aguardando,
+    diasAtePiloto: dias,
+    metaDoDia: checkpointHoje ? checkpointHoje.meta : ''
+  };
+}
+
+function planQualificador_(pct) {
+  if (pct >= 100) return 'concluído';
+  if (pct >= 85) return 'quase pronto';
+  if (pct >= 50) return 'avançando';
+  if (pct >= 15) return 'em andamento';
+  if (pct > 0) return 'começando';
+  return 'a iniciar';
+}
+
+/** Dias inteiros entre duas datas yyyy-MM-dd; null se faltar alguma. */
+function planDiasEntre_(de, ate) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(de)) || !/^\d{4}-\d{2}-\d{2}$/.test(String(ate))) return null;
+  var a = de.split('-');
+  var b = ate.split('-');
+  var d1 = Date.UTC(Number(a[0]), Number(a[1]) - 1, Number(a[2]));
+  var d2 = Date.UTC(Number(b[0]), Number(b[1]) - 1, Number(b[2]));
+  return Math.round((d2 - d1) / 86400000);
 }
 
 function planTotals_(tasks) {
@@ -250,8 +334,28 @@ function planBlocks_(tasks, lastActivityByTask, agenda) {
       : block.inFlight.length ? 'EM ANDAMENTO'
       : block.done ? 'PARCIAL'
       : 'NÃO INICIADO';
+    // Etapa que melhor representa o bloco agora — dá a cor da barra e conecta
+    // o retrato do gestor às cores do quadro.
+    block.statusDominante = planStatusDominante_(block);
+    block.etapa = block.statusDominante ? statusLabelGestor_(block.statusDominante) : '';
     return block;
   });
+}
+
+/**
+ * A etapa em que o bloco está. Entre as tarefas ainda abertas vale a mais
+ * avançada do fluxo: um bloco com 9 itens na fila e 1 em validação final está,
+ * para quem acompanha, em validação — é o que move a entrega.
+ */
+function planStatusDominante_(block) {
+  if (!block.total) return '';
+  if (block.done === block.total) return DONE_STATUS;
+  var ordem = statusNames_();
+  for (var i = ordem.length - 1; i >= 0; i--) {
+    if (ordem[i] === DONE_STATUS) continue;
+    if (block.byStatus[ordem[i]]) return ordem[i];
+  }
+  return ordem[0];
 }
 
 function emptyBlock_(id) {
@@ -262,11 +366,25 @@ function emptyBlock_(id) {
 }
 
 function planTaskCard_(task) {
+  var partes = planSplitTitulo_(task.tarefa);
   return {
     id: task.id, title: task.tarefa, status: task.status, bloco: task.bloco,
+    // O código (B01-T5) vive dentro do título; separado, a tela pode dar
+    // destaque ao que a tarefa é e deixar o código como referência discreta.
+    codigo: partes.codigo,
+    titulo: partes.texto,
+    etapa: statusLabelGestor_(task.status),
     assignee: task.responsavel, dueDate: task.dueDate, pct: task.pct,
     oQueTestar: task.oQueTestar, blocked: !!task.blocker, version: task.version
   };
+}
+
+/** "B01-T5 · Fazer X" → { codigo: 'B01-T5', texto: 'Fazer X' } */
+function planSplitTitulo_(titulo) {
+  var texto = String(titulo || '').trim();
+  var match = texto.match(/^([A-Za-z]\d{1,2}-T\d{1,3})\s*[·:\-–]\s*(.+)$/);
+  if (match) return { codigo: match[1].toUpperCase(), texto: match[2].trim() };
+  return { codigo: '', texto: texto };
 }
 
 function taskProgress_(task) {

@@ -106,14 +106,16 @@ var REL_ROTULOS = {
   'NÃO INICIADO': 'Não iniciado', 'SEM TAREFAS': 'Sem tarefas'
 };
 
-var REL_ETAPAS = {
-  'BACKLOG': 'na fila', 'NÃO-INICIADO': 'a começar', 'DEV': 'em desenvolvimento',
-  'DEVMERGE': 'em integração', 'UAT': 'em validação', 'PRODUÇÃO': 'entregue'
-};
-
 function relRotulo_(estado) { return REL_ROTULOS[estado] || estado; }
 function relCor_(estado) { return REL_CORES[estado] || '#64748b'; }
-function relEtapa_(status) { return REL_ETAPAS[status] || String(status || '').toLowerCase(); }
+
+/**
+ * Nome da etapa em português corrente. Vem do Config.js (campo `gestor`), a
+ * mesma fonte do quadro e da visão do gestor — antes este arquivo mantinha uma
+ * segunda lista, que já divergia ("em integração" contra "aguardando
+ * validação") e envelheceria sozinha.
+ */
+function relEtapa_(status) { return statusLabelGestor_(status); }
 
 /**
  * Chip de etapa na cor do status, usando a paleta que veio com a view — a
@@ -154,6 +156,28 @@ function relDataHora_(iso) {
   var data = new Date(texto);
   if (isNaN(data.getTime())) return 'sem registro';
   return Utilities.formatDate(data, Session.getScriptTimeZone(), "dd/MM 'às' HH'h'mm");
+}
+
+/** "hoje às 19h04" / "ontem às 08h12" / "18/09 às 15h30". */
+function relQuando_(iso, hoje) {
+  var texto = String(iso || '');
+  if (!/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}/.test(texto)) return 'sem registro';
+  var data = new Date(texto);
+  if (isNaN(data.getTime())) return 'sem registro';
+  var tz = Session.getScriptTimeZone();
+  var dia = Utilities.formatDate(data, tz, 'yyyy-MM-dd');
+  var hora = Utilities.formatDate(data, tz, "HH'h'mm");
+  var ref = String(hoje || '').slice(0, 10);
+  if (dia === ref) return 'hoje às ' + hora;
+  if (ref && dia === relSomarDias_(ref, -1)) return 'ontem às ' + hora;
+  return Utilities.formatDate(data, tz, 'dd/MM') + ' às ' + hora;
+}
+
+function relSomarDias_(isoDate, dias) {
+  var p = String(isoDate || '').split('-');
+  if (p.length !== 3) return '';
+  var d = new Date(Date.UTC(Number(p[0]), Number(p[1]) - 1, Number(p[2]) + dias));
+  return Utilities.formatDate(d, 'UTC', 'yyyy-MM-dd');
 }
 
 /** Data de um instante em UTC, já no fuso local. */
@@ -217,12 +241,16 @@ function montarRelatorioHtml_(view, teste) {
   }
 
   h.push('<div style="padding:22px 24px 6px">');
+  if (view.resumo && view.resumo.frase) {
+    h.push('<div style="font-size:16px;font-weight:700;color:#0f172a;line-height:1.45;' +
+      'margin-bottom:10px">' + relEsc_(view.resumo.frase) + '</div>');
+  }
   h.push('<div style="font-size:15px;color:#0f172a;line-height:1.55">' +
     '<strong>' + t.pct + '% do plano concluído</strong> — ' + t.done + ' de ' + t.total +
     ' tarefas entregues. ' + relEsc_(frase) + '</div>');
   h.push('<div style="margin:14px 0 4px">' + relBarra_(t.pct, '#1F4E79') + '</div>');
-  h.push('<div style="font-size:12px;color:#64748b">Última movimentação registrada: ' +
-    relEsc_(relDataHora_(view.lastUpdate)) + '</div>');
+  h.push('<div style="font-size:12px;color:#64748b">Última atividade: ' +
+    relEsc_(relQuando_(view.lastUpdate, view.today)) + '</div>');
   h.push('</div>');
 
   // O que está acontecendo hoje
@@ -250,12 +278,16 @@ function montarRelatorioHtml_(view, teste) {
       b.pct + '%</td></tr></table>' +
       '<div style="margin:7px 0 6px">' + relBarra_(b.pct, cor) + '</div>' +
       '<div style="font-size:12px;color:#475569">' +
-      '<span style="color:' + cor + ';font-weight:700">' + relEsc_(relRotulo_(b.state)) + '</span>' +
+      '<span style="color:' + cor + ';font-weight:700">' +
+      relEsc_(b.state === 'CONCLUÍDO' ? 'Etapa concluída' : (b.etapa || relRotulo_(b.state))) +
+      '</span>' +
       ' · ' + b.done + ' de ' + b.total + ' entregues' +
       (b.blocked ? ' · <span style="color:#b91c1c;font-weight:700">' + b.blocked +
         ' parada(s)</span>' : '') +
-      ' · ' + (b.lastUpdate ? 'mexido em ' + relEsc_(relDataHora_(b.lastUpdate))
-        : 'ainda sem movimentação') +
+      '</div>' +
+      '<div style="font-size:11.5px;color:#94a3b8;margin-top:3px">' +
+      (b.lastUpdate ? 'última atividade: ' + relEsc_(relQuando_(b.lastUpdate, view.today))
+        : 'ainda sem atividade') +
       '</div></div>');
   });
   h.push('</div>');
@@ -265,14 +297,15 @@ function montarRelatorioHtml_(view, teste) {
   h.push('<div style="padding:0 24px">');
   if (view.inFlight.length) {
     view.inFlight.forEach(function (task) {
-      h.push('<div style="padding:11px 0;border-top:1px solid #e2e8f0">' +
-        '<div style="font-size:14px;color:#0f172a;line-height:1.45">' +
-        relEsc_(task.title) + '</div>' +
-        '<div style="font-size:12px;color:#64748b;margin-top:5px">' +
-        relChipEtapa_(view.statuses, task.status) + ' &nbsp;' +
-        relEsc_(task.bloco || 'sem etapa') +
+      h.push('<div style="padding:12px 0;border-top:1px solid #e2e8f0">' +
+        '<div style="font-size:11.5px;color:#94a3b8;font-weight:600;margin-bottom:3px">' +
+        relEsc_(task.codigo || task.bloco || '') +
         (task.dueDate ? ' · previsto para ' + relEsc_(relDataCurta_(task.dueDate)) : '') +
-        '</div></div>');
+        '</div>' +
+        '<div style="font-size:15px;color:#0f172a;line-height:1.4;font-weight:600">' +
+        relEsc_(task.titulo || task.title) + '</div>' +
+        '<div style="margin-top:6px">' +
+        relChipEtapa_(view.statuses, task.status) + '</div></div>');
     });
   } else {
     h.push('<div style="padding:11px 0;border-top:1px solid #e2e8f0;font-size:13px;color:#64748b">' +
@@ -340,9 +373,10 @@ function montarRelatorioTexto_(view, teste) {
   linhas.push(view.project.name);
   linhas.push('Situação em ' + relDataCurta_(view.today));
   linhas.push('');
+  if (view.resumo && view.resumo.frase) linhas.push(view.resumo.frase);
   linhas.push(view.totals.pct + '% do plano concluído (' + view.totals.done +
     ' de ' + view.totals.total + ' tarefas entregues).');
-  linhas.push('Última movimentação: ' + relDataHora_(view.lastUpdate) + '.');
+  linhas.push('Última atividade: ' + relQuando_(view.lastUpdate, view.today) + '.');
 
   if (view.todayCheckpoint) {
     linhas.push('');
@@ -353,15 +387,16 @@ function montarRelatorioTexto_(view, teste) {
   linhas.push('');
   linhas.push('COMO ESTÁ CADA ETAPA');
   view.blocks.forEach(function (b) {
-    linhas.push('  ' + b.id + ' — ' + b.pct + '% · ' + relRotulo_(b.state) +
+    linhas.push('  ' + b.id + ' — ' + b.pct + '% · ' +
+      (b.state === 'CONCLUÍDO' ? 'Etapa concluída' : (b.etapa || relRotulo_(b.state))) +
       ' (' + b.done + '/' + b.total + ')');
   });
 
   linhas.push('');
-  linhas.push('EM ANDAMENTO AGORA');
+  linhas.push('EM QUE ELE ESTÁ TRABALHANDO AGORA');
   if (view.inFlight.length) {
     view.inFlight.forEach(function (task) {
-      linhas.push('  ' + task.title + ' — ' + relEtapa_(task.status) +
+      linhas.push('  ' + (task.titulo || task.title) + ' — ' + relEtapa_(task.status) +
         (task.dueDate ? ', previsto para ' + relDataCurta_(task.dueDate) : ''));
     });
   } else {

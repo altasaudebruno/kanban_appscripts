@@ -67,7 +67,9 @@ function checar(rotulo, frente, fundo, minimo) {
   }
 }
 
-const OBRIGATORIOS = ['header', 'light', 'font', 'accent', 'accentDark', 'tintDark', 'onDark'];
+// `gestor` entra aqui porque a visão do gestor e o relatório dependem dele:
+// um status sem rótulo amigável vazaria o jargão (DEVMERGE, UAT) para fora.
+const OBRIGATORIOS = ['header', 'light', 'font', 'accent', 'accentDark', 'tintDark', 'onDark', 'gestor'];
 
 S.forEach(s => {
   OBRIGATORIOS.forEach(campo => {

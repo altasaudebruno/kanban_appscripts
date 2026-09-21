@@ -61,6 +61,18 @@ a mesma peça para quem clicou, com assunto `[TESTE]` e tarja avisando que o
 gestor não recebeu aquela cópia. O envio é **sempre manual**, por decisão de
 projeto.
 
+### Visão do gestor em linguagem de gestor
+A página e o e-mail falam português corrente: `DEVMERGE` vira
+"Pronto, aguardando validação", `UAT` vira "Em validação final", `BACKLOG`
+vira "Na fila". O nome técnico fica só no `title` do chip. O rótulo amigável
+é o campo `gestor` em `Config.js` — mesma fonte única das cores.
+
+Abre com uma frase que responde onde o projeto está ("B01 quase pronto (88%) ·
+3 itens aguardando validação · piloto em 10 dias"), etapas ativas em cartão com
+o percentual grande e barra na cor da etapa, etapas que não começaram agrupadas
+numa lista discreta, título da tarefa em destaque com o código (B01-T5) como
+apoio, e datas relativas ("última atividade: hoje às 19h04").
+
 ### Retrabalho visual dos status — no ar
 Cada status tem identidade de cor viva na coluna (fundo com tint, faixa de 5px,
 ponto e contador) e no card (borda esquerda de 6px + chip de status).
