@@ -343,6 +343,11 @@ function seedPlano(projectId, definition, metadata) {
 
   var created = [];
   var skipped = [];
+  var pending = [];
+  // O Apps Script derruba a execução em 6 minutos. Inserir dezenas de tarefas
+  // com auditoria pode chegar perto disso, então paramos antes e devolvemos o
+  // que faltou: o seed é idempotente, basta rodar de novo para completar.
+  var deadline = Date.now() + 4 * 60 * 1000;
 
   var projectCreated = false;
   if (!findProjectRow_(projectId)) {
@@ -375,6 +380,10 @@ function seedPlano(projectId, definition, metadata) {
         skipped.push({ id: existing[key], tarefa: item.tarefa });
         return;
       }
+      if (Date.now() > deadline) {
+        pending.push(item.tarefa);
+        return;
+      }
       var sanitized = sanitizeTask_({
         tarefa: item.tarefa,
         descricao: item.descricao || '',
@@ -403,7 +412,13 @@ function seedPlano(projectId, definition, metadata) {
     created: created,
     createdCount: created.length,
     skipped: skipped,
-    skippedCount: skipped.length
+    skippedCount: skipped.length,
+    pendingCount: pending.length,
+    complete: pending.length === 0,
+    aviso: pending.length
+      ? pending.length + ' tarefa(s) não couberam no tempo de execução. ' +
+        'Rode o carregamento de novo para concluir — nada será duplicado.'
+      : ''
   };
 }
 

@@ -1,0 +1,9 @@
+# Credenciais do clasp — nunca versionar
+.clasprc.json
+client_secret*.json
+*credentials*.json
+
+# Ruído local
+node_modules/
+.DS_Store
+Thumbs.db

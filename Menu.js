@@ -88,7 +88,8 @@ function carregarPlanejamentoDocfinanceUi() {
   ui.alert('Planejamento Docfinance',
     (resultado.projectCreated ? 'Projeto ' + resultado.projectId + ' criado.\n' : '') +
     resultado.createdCount + ' tarefa(s) criada(s).\n' +
-    resultado.skippedCount + ' já existia(m) e foi(ram) preservada(s).\n\n' +
+    resultado.skippedCount + ' já existia(m) e foi(ram) preservada(s).\n' +
+    (resultado.aviso ? '\n' + resultado.aviso + '\n' : '') + '\n' +
     'Selecione o projeto ' + resultado.projectId + ' no quadro para vê-las.',
     ui.ButtonSet.OK);
 }

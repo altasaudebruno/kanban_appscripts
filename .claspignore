@@ -1,0 +1,9 @@
+# O que NÃO sobe para o Apps Script.
+**/.git/**
+**/node_modules/**
+*.md
+.clasprc.json
+client_secret*.json
+*credentials*.json
+.gitignore
+.claspignore
