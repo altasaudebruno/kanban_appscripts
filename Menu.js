@@ -50,6 +50,10 @@ function mostrarResumoDoDia() {
   }
 
   var linhas = [resumo.label + ' — ' + resumo.project.name, ''];
+  if (resumo.avisoProjeto) {
+    linhas.push('ATENÇÃO: ' + resumo.avisoProjeto);
+    linhas.push('');
+  }
   if (resumo.checkpoint) {
     linhas.push('Checkpoint de hoje: ' + resumo.checkpoint.blocks.join(' + '));
     linhas.push(resumo.checkpoint.meta);
@@ -117,15 +121,16 @@ function carregarPlanejamentoDocfinanceUi() {
 function darAcessoAoGestorUi() {
   var ui = SpreadsheetApp.getUi();
   var resposta = ui.prompt('Acesso de leitura ao gestor',
-    'E-mail do gestor (recebe papel VIEWER, que não altera nada):', ui.ButtonSet.OK_CANCEL);
+    'E-mail do gestor (recebe papel VIEWER, que não altera nada).\n' +
+    'Deixe em branco para usar ' + GESTOR_EMAIL + ':', ui.ButtonSet.OK_CANCEL);
   if (resposta.getSelectedButton() !== ui.Button.OK) return;
   try {
     var resultado = darAcessoAoGestor(resposta.getResponseText());
-    ui.alert('Acesso concedido',
-      resultado.email + ' agora é VIEWER do projeto ' + resultado.projectId + '.\n\n' +
-      'Lembre de compartilhar ESTA PLANILHA com ele como Leitor: a implantação ' +
-      'roda como o usuário que acessa.',
-      ui.ButtonSet.OK);
+    var linhas = [resultado.email + ' — projeto ' + resultado.projectId, ''];
+    linhas.push('Papel VIEWER: ' + (resultado.papelAplicado ? 'aplicado' : 'pendente'));
+    linhas.push('Leitura da planilha: ' + (resultado.leituraDaPlanilha ? 'concedida' : 'pendente'));
+    if (resultado.aviso) { linhas.push(''); linhas.push(resultado.aviso); }
+    ui.alert('Acesso ao gestor', linhas.join('\n'), ui.ButtonSet.OK);
   } catch (error) {
     ui.alert('Acesso ao gestor', String(error && error.message ? error.message : error), ui.ButtonSet.OK);
   }

@@ -195,7 +195,9 @@ function listarTarefas(projectId, bloco, status) {
     if (pa !== pb) return pa < pb ? -1 : 1;
     return a.id < b.id ? -1 : 1;
   }).map(planTaskCard_);
-  return { ok: true, projectId: project, total: tasks.length, tasks: tasks };
+  // O id lido é o do board, não o pedido: boardData_ pode ter caído noutro
+  // projeto e rotular tarefas de X como se fossem de Y.
+  return { ok: true, projectId: board.projectId, total: tasks.length, tasks: tasks };
 }
 
 /** carregarPlanejamentoDocfinance() — seed idempotente do projeto DF. */
@@ -212,23 +214,38 @@ function darAcessoAoGestor(email, projectId) {
   var alvo = String(email || GESTOR_EMAIL || '').trim().toLowerCase();
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(alvo)) throw new Error('E-mail inválido: ' + alvo);
 
-  setProjectMember(project, alvo, PROJECT_ROLES.VIEWER, true, cliMeta_(project, 'darAcessoAoGestor'));
+  var avisos = [];
+
+  // O papel pode já vir de CONFIGURED_PROJECT_MEMBERS, e o projeto pode ainda
+  // não existir (antes do seed). Nenhum dos dois casos deve impedir a parte que
+  // realmente costuma faltar: a leitura da planilha.
+  var papelOk = true;
+  try {
+    setProjectMember(project, alvo, PROJECT_ROLES.VIEWER, true, cliMeta_(project, 'darAcessoAoGestor'));
+  } catch (error) {
+    papelOk = false;
+    avisos.push('Papel no projeto ' + project + ' não aplicado agora (' +
+      String(error && error.message ? error.message : error) +
+      '). Ele já está cadastrado como VIEWER no código e o papel passa a valer ' +
+      'assim que o projeto existir.');
+  }
 
   // Sem leitura da planilha ele receberia "sem permissão" na visão do gestor:
   // a implantação roda como o usuário que acessa.
   var planilhaOk = true;
-  var planilhaErro = '';
   try {
     SpreadsheetApp.getActive().addViewer(alvo);
   } catch (error) {
     planilhaOk = false;
-    planilhaErro = String(error && error.message ? error.message : error);
+    avisos.push('Conceda a leitura da planilha manualmente (Compartilhar → Leitor): ' +
+      String(error && error.message ? error.message : error));
   }
 
   return {
-    ok: true, projectId: project, email: alvo, papel: 'VIEWER',
+    ok: planilhaOk || papelOk,
+    projectId: project, email: alvo, papel: 'VIEWER',
+    papelAplicado: papelOk,
     leituraDaPlanilha: planilhaOk,
-    aviso: planilhaOk ? '' :
-      'Conceda a leitura da planilha manualmente (Compartilhar → Leitor): ' + planilhaErro
+    aviso: avisos.join(' ')
   };
 }

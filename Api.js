@@ -373,9 +373,12 @@ function ensureBaseColumns_(sh) {
         .setWrap(true).setVerticalAlignment('middle');
       sh.setColumnWidth(TASK_COLUMNS.BLOCK, 90);
       sh.setColumnWidth(TASK_COLUMNS.TEST_PLAN, 380);
-      var body = sh.getRange(2, TASK_COLUMNS.BLOCK, Math.max(DATA_ROWS - 1, 1), extras);
-      body.setWrap(true).setVerticalAlignment('top');
-      sh.getRange(2, TASK_COLUMNS.BLOCK, Math.max(DATA_ROWS - 1, 1), 1)
+      // Nunca assumir que a base tem DATA_ROWS linhas: numa planilha aparada,
+      // pedir um intervalo maior derrubaria toda chamada que passa por aqui.
+      var linhas = Math.max(Math.min(DATA_ROWS, sh.getMaxRows()) - 1, 1);
+      sh.getRange(2, TASK_COLUMNS.BLOCK, linhas, extras)
+        .setWrap(true).setVerticalAlignment('top');
+      sh.getRange(2, TASK_COLUMNS.BLOCK, linhas, 1)
         .setHorizontalAlignment('center').setNumberFormat('@');
     }
   }
@@ -464,8 +467,15 @@ function writeTaskRow_(sh, row, s) {
   sh.getRange(row, TASK_COLUMNS.BLOCK, 1, 2).setValues([[s.bloco, s.oQueTestar]]);
 }
 
+/**
+ * Lê só as colunas que existem na aba. O gatilho onEdit chega aqui sem passar
+ * por mustBase_(), então numa base ainda não migrada pedir as 22 colunas
+ * lançaria — e o erro morreria como um toast, deixando versão e auditoria
+ * paradas em silêncio.
+ */
 function readTaskAtRow_(sh, row) {
-  return taskFromValues_(sh.getRange(row, 1, 1, TASK_COLUMN_COUNT).getValues()[0], row);
+  var cols = Math.min(TASK_COLUMN_COUNT, sh.getMaxColumns());
+  return taskFromValues_(sh.getRange(row, 1, 1, cols).getValues()[0], row);
 }
 
 function taskFromValues_(v, row) {

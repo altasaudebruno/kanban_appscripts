@@ -145,6 +145,10 @@ function render(view) {
     (view.goLive ? ' · piloto em ' + dataCurta(view.goLive) : '') +
     ' · última movimentação ' + dataHora(view.lastUpdate) + '</p>';
 
+  if (view.avisoProjeto) {
+    html += '<div class="err" style="margin-bottom:18px">' + esc(view.avisoProjeto) + '</div>';
+  }
+
   var t = view.totals;
   html += '<div class="kpis">' +
     '<div class="kpi"><div class="n">' + t.pct + '%</div><div class="l">do plano concluído</div></div>' +

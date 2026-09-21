@@ -12,13 +12,19 @@
 
 function enviarRelatorioAoGestor(destinatario, projectId) {
   var view = getManagerView(projectId || '');
+
+  // Disparar e-mail em nome do projeto é ação de quem opera o quadro, não de
+  // quem só o acompanha: VIEWER é recusado aqui, como em qualquer escrita.
+  // A execução roda como o usuário que clicou — sem esta guarda, o próprio
+  // gestor enviaria o relatório de si para si, gastando a cota dele.
+  authorizeProject_(view.project.id, true);
+
   var para = String(destinatario || GESTOR_EMAIL || '').trim().toLowerCase();
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(para)) {
     throw new Error('E-mail do destinatário inválido: ' + para);
   }
 
-  var restantes = MailApp.getRemainingDailyQuota();
-  if (restantes < 1) {
+  if (MailApp.getRemainingDailyQuota() < 1) {
     throw new Error('A cota diária de e-mails desta conta acabou. Tente novamente amanhã.');
   }
 
@@ -33,13 +39,20 @@ function enviarRelatorioAoGestor(destinatario, projectId) {
     name: 'Kanban — Alta Serviços Médicos'
   });
 
-  recordActivity_('report.sent_to_manager', view.project.id, null, {
-    projectId: view.project.id, to: para, pct: view.totals.pct
-  }, { source: 'report:email', projectId: view.project.id });
+  // A partir daqui o e-mail JÁ SAIU. Uma falha ao gravar a trilha não pode
+  // virar "não foi possível enviar" na tela de quem clicou.
+  var registrado = true;
+  try {
+    recordActivity_('report.sent_to_manager', view.project.id, null, {
+      projectId: view.project.id, to: para, pct: view.totals.pct
+    }, { source: 'report:email', projectId: view.project.id });
+  } catch (ignored) {
+    registrado = false;
+  }
 
   return {
     ok: true, destinatario: para, projectId: view.project.id,
-    assunto: assunto, pct: view.totals.pct,
+    assunto: assunto, pct: view.totals.pct, registrado: registrado,
     enviadoEm: toIsoDateTime_(new Date())
   };
 }
@@ -129,6 +142,12 @@ function montarRelatorioHtml_(view) {
     relEsc_(relDataCurta_(view.today)) +
     (view.goLive ? ' · piloto marcado para ' + relEsc_(relDataCurta_(view.goLive)) : '') +
     '</div></div>');
+
+  if (view.avisoProjeto) {
+    h.push('<div style="margin:18px 24px 0;padding:13px 15px;background:#fef2f2;' +
+      'border:1px solid #fecaca;border-radius:10px;font-size:13px;color:#991b1b;' +
+      'line-height:1.5">' + relEsc_(view.avisoProjeto) + '</div>');
+  }
 
   // Resumo em uma frase
   var t = view.totals;

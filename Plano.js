@@ -54,6 +54,54 @@ function planAgenda_(projectId) {
   return PLAN_AGENDAS[String(projectId || '').toUpperCase()] || null;
 }
 
+/** Projeto assumido quando o chamador não informa nenhum. */
+function planDefaultProjectId_() {
+  var stored = '';
+  try {
+    stored = PropertiesService.getScriptProperties().getProperty('PLAN_DEFAULT_PROJECT') || '';
+  } catch (ignored) {}
+  return String(stored || 'DF').trim().toUpperCase();
+}
+
+/**
+ * Resolve o projeto das telas de planejamento.
+ *
+ * O padrão do domínio (`resolveAccessibleProject_`) cai em "AG" quando nada é
+ * informado e engole o erro devolvendo outro projeto. Para a visão do gestor e
+ * para o relatório isso é pior do que falhar: eles mostrariam o quadro errado
+ * sem dizer nada. Aqui o projeto pedido explicitamente nunca é substituído, e
+ * a substituição do padrão volta sinalizada em `fallback`.
+ */
+function planResolveProject_(requested) {
+  var explicito = String(requested || '').trim();
+  var alvo = normalizeProjectId_(explicito || planDefaultProjectId_());
+  var encontrado = findProjectRow_(alvo);
+
+  if (encontrado && encontrado.project.active) {
+    authorizeProject_(encontrado.project.id, false);
+    return { project: encontrado.project, fallback: false, wanted: alvo };
+  }
+
+  if (explicito) {
+    throw new Error('Projeto não encontrado ou inativo: ' + alvo);
+  }
+
+  var acessiveis = listAccessibleProjects_();
+  if (!acessiveis.length) {
+    throw new Error('O projeto ' + alvo + ' ainda não existe. Use o menu ' +
+      'Kanban → "Carregar planejamento Docfinance" para criá-lo.');
+  }
+  authorizeProject_(acessiveis[0].id, false);
+  return { project: acessiveis[0], fallback: true, wanted: alvo };
+}
+
+function planFallbackAviso_(resolvido) {
+  if (!resolvido.fallback) return '';
+  return 'O projeto ' + resolvido.wanted + ' ainda não existe. Estes números são ' +
+    'do projeto ' + resolvido.project.id + '. Para carregar o planejamento, use ' +
+    'o menu Kanban → "Carregar planejamento Docfinance".';
+}
+
 // -------------------------------------------------------- visão do gestor ----
 
 /**
@@ -61,8 +109,8 @@ function planAgenda_(projectId) {
  * Bruno está hoje, o que cada bloco já entregou e quando foi a última mexida.
  */
 function getManagerView(projectId, referenceDate) {
-  var project = resolveAccessibleProject_(projectId);
-  authorizeProject_(project.id, false);
+  var resolvido = planResolveProject_(projectId);
+  var project = resolvido.project;
 
   var board = boardData_('active', project.id);
   var tasks = board.tasks;
@@ -125,6 +173,7 @@ function getManagerView(projectId, referenceDate) {
     todayCheckpoint: checkpoints.filter(function (c) { return c.date === today; })[0] || null,
     inFlight: inFlight,
     blocked: blocked,
+    avisoProjeto: planFallbackAviso_(resolvido),
     lastUpdate: lastUpdate,
     warnings: board.warnings || []
   };
@@ -265,8 +314,8 @@ function lastActivityByTask_(projectId) {
  * O que fazer e o que testar hoje. É a tela que o Bruno abre de manhã.
  */
 function resumoDiaPlano_(projectId, referenceDate) {
-  var project = resolveAccessibleProject_(projectId);
-  authorizeProject_(project.id, false);
+  var resolvido = planResolveProject_(projectId);
+  var project = resolvido.project;
   var board = boardData_('active', project.id);
   var today = planToday_(referenceDate);
   var agenda = planAgenda_(project.id);
@@ -321,6 +370,7 @@ function resumoDiaPlano_(projectId, referenceDate) {
     atrasadas: atrasadas.map(planTaskCard_),
     bloqueadas: bloqueadas.map(planTaskCard_),
     oQueTestarHoje: testes,
+    avisoProjeto: planFallbackAviso_(resolvido),
     warnings: board.warnings || []
   };
 }
