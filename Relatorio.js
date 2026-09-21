@@ -11,7 +11,41 @@
  */
 
 function enviarRelatorioAoGestor(destinatario, projectId) {
-  var view = getManagerView(projectId || '');
+  return enviarRelatorio_({
+    projectId: projectId,
+    destinatario: destinatario || GESTOR_EMAIL,
+    prefixoAssunto: '',
+    eventType: 'report.sent_to_manager',
+    teste: false
+  });
+}
+
+/** Versão do botão do quadro: usa o destinatário padrão. */
+function enviarRelatorioAoGestorPadrao(projectId) {
+  return enviarRelatorioAoGestor(GESTOR_EMAIL, projectId);
+}
+
+/**
+ * Mesmo relatório, enviado para quem clicou — para conferir como ele chega
+ * antes de mandar ao gestor. Não toca no destinatário padrão e entra na
+ * trilha como teste, para não contar como envio ao gestor.
+ */
+function enviarRelatorioTeste(projectId) {
+  var eu = currentUserEmail_();
+  if (!eu) {
+    throw new Error('Não foi possível identificar seu e-mail para enviar o teste.');
+  }
+  return enviarRelatorio_({
+    projectId: projectId,
+    destinatario: eu,
+    prefixoAssunto: '[TESTE] ',
+    eventType: 'report.test_sent',
+    teste: true
+  });
+}
+
+function enviarRelatorio_(opcoes) {
+  var view = getManagerView(opcoes.projectId || '');
 
   // Disparar e-mail em nome do projeto é ação de quem opera o quadro, não de
   // quem só o acompanha: VIEWER é recusado aqui, como em qualquer escrita.
@@ -19,7 +53,7 @@ function enviarRelatorioAoGestor(destinatario, projectId) {
   // gestor enviaria o relatório de si para si, gastando a cota dele.
   authorizeProject_(view.project.id, true);
 
-  var para = String(destinatario || GESTOR_EMAIL || '').trim().toLowerCase();
+  var para = String(opcoes.destinatario || '').trim().toLowerCase();
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(para)) {
     throw new Error('E-mail do destinatário inválido: ' + para);
   }
@@ -28,14 +62,14 @@ function enviarRelatorioAoGestor(destinatario, projectId) {
     throw new Error('A cota diária de e-mails desta conta acabou. Tente novamente amanhã.');
   }
 
-  var assunto = 'Acompanhamento ' + view.project.name + ' — ' +
-    relDataCurta_(view.today) + ' · ' + view.totals.pct + '% concluído';
+  var assunto = (opcoes.prefixoAssunto || '') + 'Acompanhamento ' + view.project.name +
+    ' — ' + relDataCurta_(view.today) + ' · ' + view.totals.pct + '% concluído';
 
   MailApp.sendEmail({
     to: para,
     subject: assunto,
-    htmlBody: montarRelatorioHtml_(view),
-    body: montarRelatorioTexto_(view),
+    htmlBody: montarRelatorioHtml_(view, opcoes.teste),
+    body: montarRelatorioTexto_(view, opcoes.teste),
     name: 'Kanban — Alta Serviços Médicos'
   });
 
@@ -43,9 +77,9 @@ function enviarRelatorioAoGestor(destinatario, projectId) {
   // virar "não foi possível enviar" na tela de quem clicou.
   var registrado = true;
   try {
-    recordActivity_('report.sent_to_manager', view.project.id, null, {
-      projectId: view.project.id, to: para, pct: view.totals.pct
-    }, { source: 'report:email', projectId: view.project.id });
+    recordActivity_(opcoes.eventType, view.project.id, null, {
+      projectId: view.project.id, to: para, pct: view.totals.pct, teste: !!opcoes.teste
+    }, { source: opcoes.teste ? 'report:test' : 'report:email', projectId: view.project.id });
   } catch (ignored) {
     registrado = false;
   }
@@ -53,13 +87,9 @@ function enviarRelatorioAoGestor(destinatario, projectId) {
   return {
     ok: true, destinatario: para, projectId: view.project.id,
     assunto: assunto, pct: view.totals.pct, registrado: registrado,
+    teste: !!opcoes.teste,
     enviadoEm: toIsoDateTime_(new Date())
   };
-}
-
-/** Versão do botão do quadro: usa o destinatário padrão. */
-function enviarRelatorioAoGestorPadrao(projectId) {
-  return enviarRelatorioAoGestor(GESTOR_EMAIL, projectId);
 }
 
 // ------------------------------------------------------------------ corpo ----
@@ -125,13 +155,21 @@ function relBarra_(pct, cor) {
     'line-height:8px;font-size:0">&nbsp;</td><td>&nbsp;</td></tr></table>';
 }
 
-function montarRelatorioHtml_(view) {
+function montarRelatorioHtml_(view, teste) {
   var F = 'font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,Arial,sans-serif';
   var h = [];
 
   h.push('<div style="' + F + ';background:#f1f5f9;padding:20px 12px;margin:0">');
   h.push('<div style="max-width:640px;margin:0 auto;background:#ffffff;border-radius:14px;' +
     'overflow:hidden;border:1px solid #e2e8f0">');
+
+  // Uma cópia de teste não pode ser confundida com o relatório que o gestor
+  // recebe — nem por quem a encaminha depois.
+  if (teste) {
+    h.push('<div style="background:#a16207;color:#ffffff;padding:10px 24px;font-size:12px;' +
+      'font-weight:700;letter-spacing:.6px;text-transform:uppercase">' +
+      'Cópia de teste — o gestor não recebeu este e-mail</div>');
+  }
 
   // Cabeçalho
   h.push('<div style="background:#1F4E79;padding:22px 24px;color:#ffffff">' +
@@ -274,8 +312,12 @@ function relTituloSecao_(texto) {
 }
 
 /** Alternativa em texto puro, para cliente de e-mail que não renderiza HTML. */
-function montarRelatorioTexto_(view) {
+function montarRelatorioTexto_(view, teste) {
   var linhas = [];
+  if (teste) {
+    linhas.push('*** CÓPIA DE TESTE — o gestor não recebeu este e-mail ***');
+    linhas.push('');
+  }
   linhas.push(view.project.name);
   linhas.push('Situação em ' + relDataCurta_(view.today));
   linhas.push('');

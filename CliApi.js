@@ -1,6 +1,6 @@
 /**
  * Contrato único para terminal, Claude e Codex via Apps Script Execution API.
- * Uso local: clasp run cliDispatch -p '[{"action":"list","projectId":"AG"}]'
+ * Uso local: clasp run cliDispatch -p '[{"action":"list","projectId":"DF"}]'
  */
 function cliDispatch(request) {
   request = request || {};

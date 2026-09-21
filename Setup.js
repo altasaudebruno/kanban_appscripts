@@ -756,8 +756,16 @@ function buildResumo_(sh) {
 
 // ------------------------------------------------------------------ SEED ----
 
-/** Grava as 28 tarefas originais. Sem force, exige BASE sem dados. */
+/**
+ * Grava as tarefas originais de Data.js. Sem force, exige BASE sem dados.
+ *
+ * A verificação de lista vazia vem ANTES de qualquer limpeza: Data.js foi
+ * neutralizado depois da remoção dos dados legados, e sem esta guarda um
+ * `seedTarefas(true)` apagaria a base inteira para em seguida não gravar nada.
+ */
 function seedTarefas(force) {
+  if (!TASKS.length) return false;
+
   var ss = SpreadsheetApp.getActive();
   var sh = ss.getSheetByName(SHEETS.BASE);
   if (!sh) throw new Error('Aba "' + SHEETS.BASE + '" não existe. Rode a instalação primeiro.');

@@ -700,7 +700,7 @@
   <div id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
 
 <script>
-  var DATA = { tasks: [], statuses: [], responsaveis: [], priorityColors: {}, warnings: [], projectId: 'AG', projects: [] };
+  var DATA = { tasks: [], statuses: [], responsaveis: [], priorityColors: {}, warnings: [], projectId: '', projects: [] };
   var editingId = null;
   var editingTask = null;
   var editingVersion = null;
@@ -841,8 +841,10 @@
   }
 
   function loadLastProject_() {
-    try { return String(localStorage.getItem(LAST_PROJECT_KEY) || 'AG'); }
-    catch (ignored) { return 'AG'; }
+    // Vazio deixa o servidor decidir o projeto padrão. Fixar um id aqui faria
+    // o quadro insistir num projeto que pode não existir mais.
+    try { return String(localStorage.getItem(LAST_PROJECT_KEY) || ''); }
+    catch (ignored) { return ''; }
   }
 
   function storeLastProject_(projectId) {

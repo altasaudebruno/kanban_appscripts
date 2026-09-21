@@ -10,13 +10,14 @@ function onOpen() {
     .addItem('Meu dia — o que fazer e testar', 'mostrarResumoDoDia')
     .addSeparator()
     .addItem('Enviar relatório ao gestor por e-mail', 'enviarRelatorioAoGestorUi')
+    .addItem('Enviar relatório de TESTE para mim', 'enviarRelatorioTesteUi')
     .addSeparator()
     .addItem('Carregar planejamento Docfinance', 'carregarPlanejamentoDocfinanceUi')
     .addItem('Dar acesso de leitura ao gestor…', 'darAcessoAoGestorUi')
+    .addItem('Limpar dados antigos…', 'limparDadosLegadosUi')
     .addSeparator()
     .addItem('Instalar (estrutura + dados)', 'instalar')
     .addItem('Reconstruir formatação/fórmulas', 'reconstruir')
-    .addItem('Recarregar dados originais (APAGA alterações)', 'recarregarDados')
     .addItem('Verificar fórmulas', 'verificarFormulas')
     .addItem('Verificar fundação P0', 'verificarFundacao')
     .addSeparator()
@@ -100,6 +101,72 @@ function enviarRelatorioAoGestorUi() {
   }
 }
 
+function enviarRelatorioTesteUi() {
+  var ui = SpreadsheetApp.getUi();
+  try {
+    var resultado = enviarRelatorioTeste();
+    ui.alert('Relatório de teste enviado',
+      'Enviado só para você: ' + resultado.destinatario + '.\n' +
+      'O gestor NÃO recebeu esta cópia.\n\n' +
+      'Assunto: ' + resultado.assunto,
+      ui.ButtonSet.OK);
+  } catch (error) {
+    ui.alert('Relatório de teste',
+      String(error && error.message ? error.message : error), ui.ButtonSet.OK);
+  }
+}
+
+function limparDadosLegadosUi() {
+  var ui = SpreadsheetApp.getUi();
+  var previa;
+  try {
+    previa = analisarDadosLegados();
+  } catch (error) {
+    ui.alert('Limpar dados antigos',
+      String(error && error.message ? error.message : error), ui.ButtonSet.OK);
+    return;
+  }
+
+  if (!previa.total) {
+    ui.alert('Limpar dados antigos',
+      'Nada a remover: a planilha já contém apenas o projeto ' + previa.manter + '.',
+      ui.ButtonSet.OK);
+    return;
+  }
+
+  var linhas = ['Serão REMOVIDOS permanentemente:', ''];
+  previa.detalhes.forEach(function (item) {
+    if (item.total) linhas.push('  ' + item.rotulo + ': ' + item.total);
+  });
+  linhas.push('');
+  linhas.push('Total: ' + previa.total + ' registro(s).');
+  linhas.push('Projeto(s) afetado(s): ' + previa.projetosLegados.join(', ') + '.');
+  linhas.push('');
+  linhas.push('SERÁ MANTIDO: apenas o projeto ' + previa.manter + '.');
+  linhas.push('');
+  linhas.push('Esta ação não tem desfazer. Continuar?');
+
+  if (ui.alert('Limpar dados antigos', linhas.join('\n'), ui.ButtonSet.YES_NO) !== ui.Button.YES) {
+    ui.alert('Limpar dados antigos', 'Cancelado. Nada foi apagado.', ui.ButtonSet.OK);
+    return;
+  }
+
+  try {
+    var resultado = limparDadosLegados(previa.manter, true);
+    var saida = ['Removidos ' + resultado.total + ' registro(s).', ''];
+    saida.push('Mantido: projeto ' + resultado.manter + '.');
+    saida.push('Auditoria da limpeza: ' +
+      (resultado.auditoriaRegistrada ? 'registrada' : 'NÃO registrada'));
+    saida.push('Estrutura reconstruída: ' +
+      (resultado.estruturaReconstruida ? 'sim' : 'NÃO'));
+    if (resultado.aviso) { saida.push(''); saida.push(resultado.aviso); }
+    ui.alert('Limpeza concluída', saida.join('\n'), ui.ButtonSet.OK);
+  } catch (error) {
+    ui.alert('Limpar dados antigos',
+      String(error && error.message ? error.message : error), ui.ButtonSet.OK);
+  }
+}
+
 function carregarPlanejamentoDocfinanceUi() {
   var ui = SpreadsheetApp.getUi();
   var resultado;
@@ -141,7 +208,8 @@ function instalar() {
   var seeded = seedTarefas(false);
   SpreadsheetApp.getUi().alert(
     'Instalação concluída.' +
-    (seeded ? '\n\n28 tarefas originais carregadas.' : '\n\nDados existentes preservados (nada foi sobrescrito).'));
+    (seeded ? '\n\nTarefas originais carregadas.'
+            : '\n\nDados existentes preservados (nada foi sobrescrito).'));
 }
 
 function reconstruir() {
@@ -150,11 +218,24 @@ function reconstruir() {
     'Estrutura, fórmulas e formatação reconstruídas e verificadas. Dados de negócio intactos.');
 }
 
+/**
+ * Mantida só por compatibilidade: o item de menu saiu junto com a limpeza dos
+ * dados legados. Com Data.js neutralizado não há o que recarregar, e seguir
+ * adiante apagaria a base para gravar nada.
+ */
 function recarregarDados() {
   var ui = SpreadsheetApp.getUi();
+  if (!TASKS.length) {
+    ui.alert('Recarregar dados originais',
+      'Não há dados originais para recarregar: o seed legado foi neutralizado ' +
+      'junto com a limpeza dos dados antigos.\n\n' +
+      'Para carregar o planejamento do MVP, use "Carregar planejamento Docfinance".',
+      ui.ButtonSet.OK);
+    return;
+  }
   var resp = ui.alert(
     'Recarregar dados originais',
-    'Isto APAGA todas as alterações na aba BASE DE TAREFAS e regrava as 28 tarefas originais do Excel. Continuar?',
+    'Isto APAGA todas as alterações na aba BASE DE TAREFAS e regrava as tarefas originais. Continuar?',
     ui.ButtonSet.YES_NO);
   if (resp !== ui.Button.YES) return;
   setupPlanilha();

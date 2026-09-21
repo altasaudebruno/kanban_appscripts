@@ -19,8 +19,11 @@ var SHEETS = {
   CALC: 'CALC'
 };
 
-// Projeto legado/default usado na migração de linhas antigas sem project_id.
-var DEFAULT_PROJECT_ID = 'AG';
+// Projeto assumido quando uma linha ou requisição não informa project_id.
+// Era 'AG' enquanto a planilha carregava a cópia do controle anterior; depois
+// da limpeza dos dados legados, apontar para 'AG' faria toda chamada sem
+// projeto explícito mirar um projeto que não existe mais.
+var DEFAULT_PROJECT_ID = 'DF';
 
 // Ordem oficial das colunas do quadro (mesma do Excel).
 var STATUSES = [
@@ -148,9 +151,10 @@ var PROJECT_ROLES = { VIEWER: 'VIEWER', MEMBER: 'MEMBER', MANAGER: 'MANAGER', OW
 // Membros operacionais confirmados para o projeto inicial. A rotina de garantia
 // apenas cria linhas ausentes; nunca reativa nem altera o papel de uma linha já
 // administrada na planilha.
+// As entradas do projeto AG saíram junto com a limpeza dos dados legados: como
+// esta lista é reaplicada a cada setup, mantê-las recriaria os membros do
+// projeto antigo logo após apagá-los.
 var CONFIGURED_PROJECT_MEMBERS = [
-  { projectId: 'AG', userEmail: 'bruno@altaservicosmedicos.com.br', role: 'MEMBER' },
-  { projectId: 'AG', userEmail: 'ricardo.santos@altaservicosmedicos.com.br', role: 'MEMBER' },
   // O gestor acompanha o MVP Docfinance em leitura. VIEWER é recusado em
   // qualquer mutação por authorizeProject_ — ele vê, não mexe.
   { projectId: 'DF', userEmail: 'geovane.barbosa@altaservicosmedicos.com.br', role: 'VIEWER' },

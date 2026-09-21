@@ -72,9 +72,21 @@ por `LockService`, exige a **versão** esperada (controle otimista), a exclusão
 2. Menu **Kanban → Carregar planejamento Docfinance**.
    Cria o projeto `DF` e as 70 tarefas. Rodar de novo nunca duplica — se a
    mensagem disser que faltaram tarefas por tempo de execução, é só repetir.
-3. Menu **Kanban → Abrir Quadro Kanban** e selecionar o projeto **DF**.
+3. Menu **Kanban → Limpar dados antigos…**
+   Remove o que sobrou da planilha copiada (projeto `AG` e qualquer outro que
+   não seja o `DF`). **Mostra as contagens e pede confirmação antes de apagar**
+   — nada sai sem você ver o número. Não tem desfazer.
+4. Menu **Kanban → Dar acesso de leitura ao gestor…**
+5. Menu **Kanban → Enviar relatório de TESTE para mim** — confere como o
+   relatório chega antes de mandar ao Geovane.
+6. Menu **Kanban → Abrir Quadro Kanban** e selecionar o projeto **DF**.
 
 Diário: **Kanban → Meu dia — o que fazer e testar**.
+
+> O passo 3 é definitivo e foi autorizado pelo Bruno: esta planilha é cópia de
+> um controle anterior. O seed legado (`Data.js`) foi neutralizado e o item
+> "Recarregar dados originais" saiu do menu, para que nenhum caminho de
+> instalação regrave o que acabou de ser apagado.
 
 ---
 
@@ -125,6 +137,15 @@ clasp run-function darAcessoAoGestor
 
 # Enviar o relatório de acompanhamento por e-mail ao gestor
 clasp run-function enviarRelatorioAoGestorPadrao
+
+# Mesmo relatório, só para você conferir (assunto "[TESTE] ")
+clasp run-function enviarRelatorioTeste
+
+# Prévia do que a limpeza removeria — somente leitura, não apaga nada
+clasp run-function analisarDadosLegados
+
+# Remover os dados legados (o segundo parâmetro true é a confirmação)
+clasp run-function limparDadosLegados --params '["DF",true]'
 ```
 
 **Por que `finalizarTarefa` não é só "mover para PRODUÇÃO":** o domínio só
@@ -176,6 +197,14 @@ em que ele está trabalhando agora, o que está travado e o calendário até o
 piloto. Vai em HTML e também em texto puro.
 
 Pelo terminal: `clasp run-function enviarRelatorioAoGestorPadrao`
+
+**Antes de mandar ao gestor, teste em você:** menu **Kanban → Enviar relatório
+de TESTE para mim**. Envia o mesmo relatório para a conta que clicou, com
+assunto prefixado `[TESTE]` e uma tarja no topo dizendo que o gestor não
+recebeu aquela cópia. O destinatário padrão não é alterado e a trilha registra
+`report.test_sent`, não um envio ao gestor.
+
+Pelo terminal: `clasp run-function enviarRelatorioTeste`
 
 > O envio é **sempre manual**. Não foi criado nenhum gatilho automático de
 > e-mail: relatório que sai sozinho é relatório que um dia sai errado sem
@@ -315,7 +344,8 @@ decisão consciente.
 | `Config.js` | constantes: colunas, status, cores, listas |
 | `Api.js` | domínio: CRUD, versão, bloqueios, UAT, projetos, auditoria |
 | `Plano.js` | agenda, visão do gestor, resumo do dia, motor do seed |
-| `Relatorio.js` | relatório de acompanhamento por e-mail |
+| `Relatorio.js` | relatório de acompanhamento por e-mail (gestor e teste) |
+| `Limpeza.js` | prévia e remoção dos dados legados, em blocos contíguos |
 | `PlanoDocfinance.js` | as 70 tarefas B00–B07 do MVP |
 | `CliPlano.js` | comandos de terminal de alto nível |
 | `CliApi.js` | `cliDispatch`, contrato estrito com versão |
@@ -325,7 +355,7 @@ decisão consciente.
 | `Menu.js` | menu da planilha |
 | `Setup.js` | montagem das abas, fórmulas e auditoria da fundação |
 | `Search.js`, `Inbox.js`, `Automation.js`, `Triggers.js` | busca, captura e automações |
-| `Data.js` | as 28 tarefas originais do projeto `AG` |
+| `Data.js` | seed legado do projeto `AG` — **neutralizado** (lista vazia) |
 
 Histórico do git: o commit `baseline` é o clone original, intocado. Toda
 alteração veio depois dele.
