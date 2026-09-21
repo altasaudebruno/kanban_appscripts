@@ -261,7 +261,54 @@ Aceitar é obrigatório para o relatório funcionar.
 
 ---
 
-## 6. Estrutura do repositório
+## 6. Defeitos conhecidos (sem correção)
+
+A revisão de código apontou 9 achados. **7 foram corrigidos** — seis no commit
+`2cf23bc` e um (`criarTarefa` ecoando a tarefa errada) no commit anterior
+`48ec686`, feito antes da revisão chegar. Os **2 abaixo continuam abertos**, por
+decisão consciente.
+
+### C1 — A visão do gestor por link só abre para contas do domínio
+
+- **Onde:** `appsscript.json`, `webapp.access: "DOMAIN"` com
+  `executeAs: "USER_ACCESSING"`.
+- **Sintoma:** um gestor fora de `@altaservicosmedicos.com.br` bate em tela de
+  login ou 401 ao abrir `/exec?view=gestor`, **mesmo tendo papel `VIEWER`** em
+  `PROJECT_MEMBERS`. O papel não é o que barra: é o acesso da implantação.
+- **Por que não corrigi:** as duas saídas são piores que o defeito. Abrir para
+  `ANYONE` exporia o **mesmo deployment que serve o quadro de operação**, dando
+  escrita no Kanban a quem tiver a URL. Trocar `executeAs` para
+  `USER_DEPLOYING` faria o Kanban inteiro rodar como o Bruno, anulando a
+  autorização por membro que o sistema já tem.
+- **Risco prático para o Bruno:** **nenhum hoje.** O Geovane está no domínio, e
+  tanto o relatório por e-mail quanto o acesso pela planilha independem disso.
+  Só aparece se um dia quiser mostrar o quadro a alguém de fora do domínio ou
+  numa conta pessoal — aí o caminho é o relatório por e-mail, que funciona para
+  qualquer destinatário.
+
+### C2 — O seed pode não carregar as 70 tarefas numa execução só
+
+- **Onde:** `Plano.js`, função `seedPlano` — cada tarefa entra por
+  `insertTaskLocked_`, que faz várias gravações na planilha mais uma linha de
+  auditoria.
+- **Sintoma:** em planilha lenta, a execução para em ~4 minutos (guarda
+  deliberada, antes do limite de 6 do Apps Script) e informa quantas tarefas
+  faltaram. O planejamento fica incompleto até rodar de novo.
+- **Por que não corrigi:** a correção real é inserir em lote e agrupar a
+  auditoria, o que exige reescrever `insertTaskLocked_` — o caminho usado por
+  **todas** as criações de tarefa do sistema, inclusive pelo quadro e pela
+  Inbox. Alto risco de quebrar a criação normal por um ganho que a guarda já
+  cobre.
+- **Risco prático para o Bruno:** **baixo e visível, nunca silencioso.** A
+  mensagem diz exatamente quantas faltaram, e rodar o item de menu de novo
+  completa a carga sem duplicar nada (idempotente por título). No pior caso,
+  dois cliques em vez de um, só no dia da carga inicial.
+
+> Não são defeitos, mas limitam o uso e estão documentados em outras seções:
+> os comandos `clasp run` exigem a configuração de GCP/OAuth da **seção 5**, e
+> não existe endpoint `curl` por decisão de segurança explicada na **seção 4.2**.
+
+## 7. Estrutura do repositório
 
 | Arquivo | Conteúdo |
 |---|---|
