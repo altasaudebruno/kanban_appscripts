@@ -16,6 +16,12 @@ function cliDispatch(request) {
     var listBoard = getBoardData(projectId);
     if (listBoard.projectId !== projectId) throw new Error('Projeto indisponível: ' + projectId);
     data = cliList_(listBoard, payload);
+  } else if (action === 'today' || action === 'resumo_dia') {
+    data = resumoDiaPlano_(projectId, payload.date);
+  } else if (action === 'manager' || action === 'gestor') {
+    data = getManagerView(projectId, payload.date);
+  } else if (action === 'plan_seed') {
+    data = seedPlano(projectId, null, metadata);
   } else if (action === 'search') {
     data = searchProjectKnowledge(projectId, payload.query, payload);
   } else if (action === 'ask') {
@@ -57,7 +63,7 @@ function cliDispatch(request) {
       data = cliMutationResult_(updateTaskStatus(taskId, String(payload.status || ''), version, metadata), taskId);
     } else if (action === 'submit_uat' || action === 'complete') {
       data = cliMutationResult_(updateTaskStatus(taskId, 'UAT', version, metadata), taskId);
-    } else if (action === 'comment') {
+    } else if (action === 'comment' || action === 'note') {
       data = cliMutationResult_(addTaskComment(taskId, version, payload.body, metadata), taskId);
     } else if (action === 'block') {
       data = cliMutationResult_(blockTask(taskId, version, payload, metadata), taskId);
@@ -92,6 +98,7 @@ function cliList_(board, filters) {
   var search = String(filters.search || '').toLowerCase();
   var tasks = board.tasks.filter(function (task) {
     if (filters.status && task.status !== filters.status) return false;
+    if (filters.bloco && String(task.bloco || '').toUpperCase() !== String(filters.bloco).toUpperCase()) return false;
     if (filters.assignee && task.responsavel !== filters.assignee) return false;
     if (filters.blocked === true && !task.blocker) return false;
     if (filters.blocked === false && task.blocker) return false;
@@ -102,9 +109,10 @@ function cliList_(board, filters) {
     return true;
   }).map(function (task) {
     return {
-      id: task.id, title: task.tarefa, status: task.status,
+      id: task.id, title: task.tarefa, status: task.status, bloco: task.bloco,
       assignee: task.responsavel, priority: task.prioridade, dueDate: task.dueDate,
       version: task.version, blocked: !!task.blocker,
+      oQueTestar: task.oQueTestar,
       uatStatus: task.uat ? task.uat.status : ''
     };
   });
