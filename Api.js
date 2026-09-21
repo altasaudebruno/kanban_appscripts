@@ -97,6 +97,8 @@ function saveTask(t, metadata) {
     assertTaskProject_(before, metadata);
     assertActive_(before);
     assertExpectedVersion_(s.id, s.version, before.version);
+    if (s.omitted && s.omitted.bloco) s.bloco = before.bloco;
+    if (s.omitted && s.omitted.oQueTestar) s.oQueTestar = before.oQueTestar;
     validateWorkflowTransition_(before, s.status, s.subtarefas);
     if (before.status !== 'UAT' && s.status === 'UAT' && findPendingUatRow_(s.id)) {
       throw new Error('Já existe um ciclo de UAT pendente para ' + s.id + '.');
@@ -338,6 +340,46 @@ function decideUat(id, expectedVersion, decision, feedback, metadata) {
 function mustBase_() {
   var sh = SpreadsheetApp.getActive().getSheetByName(SHEETS.BASE);
   if (!sh) throw new Error('Aba "' + SHEETS.BASE + '" não encontrada. Use o menu Kanban → Instalar.');
+  ensureBaseColumns_(sh);
+  return sh;
+}
+
+/**
+ * Migração idempotente das colunas U (Bloco) e V (O que testar).
+ *
+ * A planilha em produção nasceu com o layout legado A..T. Em vez de exigir que
+ * o operador rode "Reconstruir" antes de usar as novas funcionalidades, cada
+ * acesso à base garante a existência das colunas. O cache de execução evita
+ * pagar o custo mais de uma vez por invocação.
+ */
+var BASE_COLUMNS_CHECKED_ = false;
+
+function ensureBaseColumns_(sh) {
+  if (BASE_COLUMNS_CHECKED_) return sh;
+  if (sh.getMaxColumns() < TASK_COLUMN_COUNT) {
+    sh.insertColumnsAfter(sh.getMaxColumns(), TASK_COLUMN_COUNT - sh.getMaxColumns());
+  }
+  var extras = TASK_COLUMN_COUNT - LEGACY_COLUMN_COUNT;
+  if (extras > 0) {
+    var range = sh.getRange(1, LEGACY_COLUMN_COUNT + 1, 1, extras);
+    var current = range.getValues()[0];
+    var expected = BASE_HEADERS.slice(LEGACY_COLUMN_COUNT);
+    var needsHeader = expected.some(function (label, index) {
+      return String(current[index] || '') !== label;
+    });
+    if (needsHeader) {
+      range.setValues([expected])
+        .setBackground(HEADER_FILL).setFontColor('#FFFFFF').setFontWeight('bold')
+        .setWrap(true).setVerticalAlignment('middle');
+      sh.setColumnWidth(TASK_COLUMNS.BLOCK, 90);
+      sh.setColumnWidth(TASK_COLUMNS.TEST_PLAN, 380);
+      var body = sh.getRange(2, TASK_COLUMNS.BLOCK, Math.max(DATA_ROWS - 1, 1), extras);
+      body.setWrap(true).setVerticalAlignment('top');
+      sh.getRange(2, TASK_COLUMNS.BLOCK, Math.max(DATA_ROWS - 1, 1), 1)
+        .setHorizontalAlignment('center').setNumberFormat('@');
+    }
+  }
+  BASE_COLUMNS_CHECKED_ = true;
   return sh;
 }
 
@@ -419,6 +461,7 @@ function writeTaskRow_(sh, row, s) {
     s.pct === '' ? '' : s.pct
   ]]);
   sh.getRange(row, TASK_COLUMNS.DUE_DATE).setValue(fromIso_(s.dueDate));
+  sh.getRange(row, TASK_COLUMNS.BLOCK, 1, 2).setValues([[s.bloco, s.oQueTestar]]);
 }
 
 function readTaskAtRow_(sh, row) {
@@ -448,7 +491,9 @@ function taskFromValues_(v, row) {
     deletedAt: toIsoDateTime_(v[TASK_COLUMNS.DELETED_AT - 1]),
     deletedBy: String(v[TASK_COLUMNS.DELETED_BY - 1] || ''),
     dueDate: toIso_(v[TASK_COLUMNS.DUE_DATE - 1]),
-    projectId: String(v[TASK_COLUMNS.PROJECT_ID - 1] || DEFAULT_PROJECT_ID)
+    projectId: String(v[TASK_COLUMNS.PROJECT_ID - 1] || DEFAULT_PROJECT_ID),
+    bloco: String(v[TASK_COLUMNS.BLOCK - 1] || ''),
+    oQueTestar: String(v[TASK_COLUMNS.TEST_PLAN - 1] || '')
   };
 }
 
@@ -474,9 +519,22 @@ function sanitizeTask_(t) {
   if (pct !== '' && (!isFinite(pct) || pct < 0 || pct > 1)) {
     throw new Error('Percentual concluído deve estar entre 0 e 100%.');
   }
+  var bloco = String(t.bloco === undefined || t.bloco === null ? '' : t.bloco).trim().toUpperCase();
+  if (bloco.length > 16) throw new Error('Bloco deve ter no máximo 16 caracteres.');
+  var oQueTestar = String(t.oQueTestar === undefined || t.oQueTestar === null ? '' : t.oQueTestar);
+  if (oQueTestar.length > 5000) throw new Error('"O que testar" deve ter no máximo 5000 caracteres.');
+
   return {
     id: String(t.id || '').trim(),
     projectId: normalizeProjectId_(t.projectId || DEFAULT_PROJECT_ID),
+    bloco: bloco,
+    oQueTestar: oQueTestar,
+    // Um chamador legado (tela antiga, AppSheet) não conhece as colunas U e V.
+    // Sem esta marca, a edição gravaria vazio e apagaria o conteúdo existente.
+    omitted: {
+      bloco: t.bloco === undefined,
+      oQueTestar: t.oQueTestar === undefined
+    },
     version: t.version,
     tarefa: title,
     descricao: String(t.descricao || ''),

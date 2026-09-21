@@ -144,7 +144,7 @@ function setupPlanilha() {
 
   // Equivalente da tabela "TabelaTarefas" do Excel.
   ss.setNamedRange('TabelaTarefas', base.getRange(
-    'A1:T' + Math.max(DATA_ROWS, base.getLastRow())));
+    'A1:' + columnLetter_(BASE_HEADERS.length) + Math.max(DATA_ROWS, base.getLastRow())));
 
   // Remove abas padrão vazias que tenham sobrado (ex.: "Página1").
   ss.getSheets().forEach(function (sh) {
@@ -253,8 +253,12 @@ function buildBase_(sh, listas) {
   sh.getRange('B2:D' + n).setWrap(true).setVerticalAlignment('top');
   sh.getRange('J2:K' + n).setWrap(true).setVerticalAlignment('top');
 
-  var widths = { 1: 80, 2: 280, 3: 330, 4: 360, 5: 85, 6: 95, 7: 110, 8: 130, 9: 110, 10: 140, 11: 260, 12: 105, 13: 105, 14: 115, 15: 100, 16: 70, 17: 150, 18: 220, 19: 105, 20: 100 };
+  var widths = { 1: 80, 2: 280, 3: 330, 4: 360, 5: 85, 6: 95, 7: 110, 8: 130, 9: 110, 10: 140, 11: 260, 12: 105, 13: 105, 14: 115, 15: 100, 16: 70, 17: 150, 18: 220, 19: 105, 20: 100, 21: 90, 22: 380 };
   Object.keys(widths).forEach(function (c) { sh.setColumnWidth(Number(c), widths[c]); });
+
+  // U = Bloco (B00..B07), V = O que testar no dia.
+  sh.getRange(2, TASK_COLUMNS.BLOCK, n - 1, 1).setHorizontalAlignment('center').setNumberFormat('@');
+  sh.getRange(2, TASK_COLUMNS.BLOCK, n - 1, 2).setWrap(true).setVerticalAlignment('top');
 
   // Formatação condicional: prioridade (E) + status (H). Substitui tudo —
   // reexecutar nunca acumula regras.

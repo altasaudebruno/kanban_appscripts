@@ -58,7 +58,7 @@ var BASE_HEADERS = [
   'Prioridade', 'Dificuldade', 'Pontuação combinada', 'Status', 'Responsável',
   'Dependências', 'Observações', 'Data de criação', 'Data de início',
   'Data de conclusão', 'Percentual concluído', 'Versão', 'Excluído em',
-  'Excluído por', 'Prazo', 'Project ID'
+  'Excluído por', 'Prazo', 'Project ID', 'Bloco', 'O que testar'
 ];
 
 var TASK_COLUMNS = {
@@ -81,8 +81,14 @@ var TASK_COLUMNS = {
   DELETED_AT: 17,
   DELETED_BY: 18,
   DUE_DATE: 19,
-  PROJECT_ID: 20
+  PROJECT_ID: 20,
+  BLOCK: 21,
+  TEST_PLAN: 22
 };
+
+// Última coluna preservada pelo layout legado (A..T). As colunas acima de
+// LEGACY_COLUMN_COUNT são migradas sob demanda por ensureBaseColumns_().
+var LEGACY_COLUMN_COUNT = 20;
 
 var TASK_COLUMN_COUNT = BASE_HEADERS.length;
 
