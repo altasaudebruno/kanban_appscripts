@@ -35,8 +35,10 @@ var PLAN_AGENDAS = {
     description: 'MVP de consultoria financeira. Piloto com cliente real em 01/10/2026.',
     goLive: '2026-10-01',
     checkpoints: [
-      { date: '2026-09-21', blocks: ['B00', 'B01'], meta: 'Decisões fechadas e fundação do repositório de pé (scaffold, Docker, CI).' },
-      { date: '2026-09-22', blocks: ['B00', 'B01'], meta: 'Fundação concluída: design system aplicado e pipeline verde.' },
+      // 21 e 22/09 foram fundidos em um único dia de abertura: o trabalho dos
+      // dois aconteceu junto, e manter 21/09 separado deixava a agenda abrindo
+      // com uma linha "Atrasado" que não descreve o que houve.
+      { date: '2026-09-22', blocks: ['B00', 'B01'], meta: 'Decisões fechadas e fundação de pé: scaffold, Docker, CI, design system e pipeline verde.' },
       { date: '2026-09-23', blocks: ['B02', 'B03'], meta: 'Identidade/convites funcionando; onboarding iniciado.' },
       { date: '2026-09-24', blocks: ['B02', 'B03'], meta: 'Autorização e carteira de clientes concluídas.' },
       { date: '2026-09-25', blocks: ['B04'], meta: 'Lançamentos gravando e listando com filtros.' },

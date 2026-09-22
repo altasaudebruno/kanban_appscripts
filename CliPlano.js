@@ -199,6 +199,54 @@ function listarTarefas(projectId, bloco, status) {
   return { ok: true, projectId: board.projectId, total: tasks.length, tasks: tasks };
 }
 
+/**
+ * rebasearPrazos('2026-09-21', '2026-09-22') — move o prazo das tarefas que
+ * ainda estão abertas de uma data para outra.
+ *
+ * Só toca no que continua em aberto: uma tarefa já entregue mantém o prazo
+ * real em que foi entregue, senão o histórico passa a mentir. Usa o caminho
+ * normal de atualização (versão + auditoria), nunca escrita crua na planilha.
+ */
+function rebasearPrazos(de, para, projectId) {
+  var origem = String(de || '').trim();
+  var destino = String(para || '').trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(origem) || !/^\d{4}-\d{2}-\d{2}$/.test(destino)) {
+    throw new Error('Informe as datas no formato yyyy-MM-dd. Ex.: ["2026-09-21","2026-09-22"]');
+  }
+
+  var project = cliProjectId_(projectId);
+  var board = boardData_('active', project);
+  var alvos = board.tasks.filter(function (task) {
+    return task.dueDate === origem && task.status !== 'PRODUÇÃO';
+  });
+
+  var movidas = [];
+  var falhas = [];
+  alvos.forEach(function (task) {
+    try {
+      var atual = cliTask_(project, task.id);
+      if (atual.dueDate !== origem || atual.status === 'PRODUÇÃO') return;
+      atual.dueDate = destino;
+      saveTask(atual, cliMeta_(project, 'rebasearPrazos'));
+      movidas.push({ id: atual.id, titulo: atual.tarefa, bloco: atual.bloco });
+    } catch (error) {
+      falhas.push({ id: task.id, erro: String(error && error.message ? error.message : error) });
+    }
+  });
+
+  var mantidas = board.tasks.filter(function (task) {
+    return task.dueDate === origem && task.status === 'PRODUÇÃO';
+  }).length;
+
+  return {
+    ok: !falhas.length,
+    projectId: project, de: origem, para: destino,
+    movidas: movidas.length, detalhes: movidas,
+    mantidasPorJaEstaremEntregues: mantidas,
+    falhas: falhas
+  };
+}
+
 /** carregarPlanejamentoDocfinance() — seed idempotente do projeto DF. */
 function carregarPlanejamentoDocfinance() {
   return seedPlano('DF', null, { source: 'cli:terminal', projectId: 'DF' });

@@ -14,6 +14,7 @@ function onOpen() {
     .addSeparator()
     .addItem('Carregar planejamento Docfinance', 'carregarPlanejamentoDocfinanceUi')
     .addItem('Dar acesso de leitura ao gestor…', 'darAcessoAoGestorUi')
+    .addItem('Mover prazos de um dia para hoje…', 'rebasearPrazosUi')
     .addItem('Limpar dados antigos…', 'limparDadosLegadosUi')
     .addSeparator()
     .addItem('Instalar (estrutura + dados)', 'instalar')
@@ -113,6 +114,34 @@ function enviarRelatorioTesteUi() {
   } catch (error) {
     ui.alert('Relatório de teste',
       String(error && error.message ? error.message : error), ui.ButtonSet.OK);
+  }
+}
+
+function rebasearPrazosUi() {
+  var ui = SpreadsheetApp.getUi();
+  var hoje = planToday_();
+  var resposta = ui.prompt('Mover prazos para hoje',
+    'Prazos de qual dia devem passar para ' + hoje + '?\n' +
+    'Informe no formato aaaa-mm-dd (ex.: ' + hoje + ').\n\n' +
+    'Tarefas já entregues mantêm o prazo original.',
+    ui.ButtonSet.OK_CANCEL);
+  if (resposta.getSelectedButton() !== ui.Button.OK) return;
+
+  try {
+    var r = rebasearPrazos(resposta.getResponseText().trim(), hoje);
+    var linhas = [r.movidas + ' tarefa(s) com prazo movido de ' + r.de + ' para ' + r.para + '.'];
+    if (r.mantidasPorJaEstaremEntregues) {
+      linhas.push(r.mantidasPorJaEstaremEntregues +
+        ' já estavam entregues e mantiveram o prazo original.');
+    }
+    if (r.falhas.length) {
+      linhas.push('');
+      linhas.push('Não foi possível mover ' + r.falhas.length + ':');
+      r.falhas.slice(0, 5).forEach(function (f) { linhas.push('  ' + f.id + ': ' + f.erro); });
+    }
+    ui.alert('Prazos', linhas.join('\n'), ui.ButtonSet.OK);
+  } catch (error) {
+    ui.alert('Prazos', String(error && error.message ? error.message : error), ui.ButtonSet.OK);
   }
 }
 
