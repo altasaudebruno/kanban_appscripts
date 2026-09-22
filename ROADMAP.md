@@ -186,6 +186,24 @@ planilha, no quadro, na visão do gestor e no relatório.
 
 ---
 
+## 4.1 Regra que já custou uma confusão
+
+**Mudou algo que o gestor vê? `clasp push` não basta.** A URL `/exec` serve a
+versão congelada no deployment; o push só atualiza o código do projeto. Em
+22/09 isso fez a página do gestor mostrar o retrato de ontem — calendário com
+"Atrasado", sem a frase de abertura — enquanto o e-mail saía correto, porque o
+e-mail roda no código atual e a página não.
+
+```bash
+bash ferramentas/publicar.sh "o que mudou nesta versão"
+```
+
+Faz push, cria a versão e republica **o mesmo deployment** (o link do Geovane
+não muda). Detalhes e o passo a passo manual na seção 3 do
+`README-INTEGRACAO.md`. Depois, Ctrl+F5 na página.
+
+---
+
 ## 5. Como retomar
 
 **Ordem de leitura:** este `ROADMAP.md` → `README-INTEGRACAO.md` (seção 2 para

@@ -174,6 +174,32 @@ clasp pull     # traz o que foi editado no navegador
 clasp status   # o que seria enviado
 ```
 
+### Publicar para o gestor (o push sozinho NÃO basta)
+
+> **A armadilha:** `clasp push` atualiza o código do projeto, mas a URL `/exec`
+> serve a **versão congelada** no deployment. Sem republicar, a página do gestor
+> continua mostrando o que era ontem — com o push verde e o e-mail já correto,
+> porque o e-mail roda no código atual e a página não.
+
+Sempre que mexer em algo que o gestor vê (`Gestor.html`, `Plano.js`,
+`Config.js`), publique:
+
+```bash
+bash ferramentas/publicar.sh "o que mudou nesta versão"
+```
+
+O script faz push, cria a versão e **republica o mesmo deployment** — o ID não
+muda, então o link que o Geovane tem continua valendo. À mão seria:
+
+```bash
+clasp push --force
+clasp create-version "o que mudou"
+clasp list-deployments                      # pegue o ID que NÃO está @HEAD
+clasp update-deployment --versionNumber <N> <deploymentId>
+```
+
+Depois, recarregue a página com **Ctrl+F5** para furar o cache do navegador.
+
 Editou pelo navegador? Rode `clasp pull` **antes** de `clasp push`, senão o
 push sobrescreve a edição feita lá.
 

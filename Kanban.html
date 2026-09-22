@@ -305,6 +305,24 @@
   #f_pct { flex: 1; }
   #pctlabel { font-size: 13px; font-weight: 700; min-width: 42px; text-align: right; }
   #score { font-size: 13px; font-weight: 700; }
+  /* Confirmação do próprio sistema, no lugar do confirm() do navegador.
+     z-index acima dos demais overlays: ela pode ser aberta a partir de um
+     modal já aberto e precisa bloquear o que está atrás. */
+  #askOverlay {
+    position: fixed; inset: 0; background: var(--overlay); z-index: 90;
+    display: none; align-items: center; justify-content: center; padding: 24px 12px;
+  }
+  #askOverlay.open { display: flex; }
+  #askModal {
+    background: var(--surface); border-radius: 8px; width: 460px; max-width: 96vw;
+    box-shadow: 0 12px 34px rgba(9,30,66,.45); padding: 20px 22px;
+    border-top: 4px solid var(--primary);
+  }
+  #askOverlay.danger #askModal { border-top-color: var(--danger); }
+  #askModal h2 { font-size: 15.5px; margin-bottom: 8px; }
+  #askModal p { font-size: 13px; line-height: 1.5; color: var(--muted); white-space: pre-line; }
+  #askOverlay.danger #askOk { background: var(--danger); border-color: var(--danger); color: #fff; }
+
   .modal-actions { display: flex; gap: 10px; margin-top: 18px; justify-content: flex-end; }
   .modal-actions .spacer { margin-right: auto; }
   #draftStatus { margin-left: auto; font-size: 11px; font-weight: 500; color: var(--muted); }
@@ -745,10 +763,85 @@
     </div>
   </div>
 
+  <div id="askOverlay">
+    <div id="askModal" role="alertdialog" aria-modal="true"
+         aria-labelledby="askTitle" aria-describedby="askText">
+      <h2 id="askTitle"></h2>
+      <p id="askText"></p>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="askCancel" type="button"></button>
+        <button class="btn btn-primary" id="askOk" type="button"></button>
+      </div>
+    </div>
+  </div>
+
   <div id="loading" role="status" aria-live="polite" aria-label="Carregando" aria-hidden="true"><div class="spinner" aria-hidden="true"></div><span class="sr-only">Carregando…</span></div>
   <div id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
 
 <script>
+  /**
+   * Confirmação com a cara do sistema, no lugar de window.confirm.
+   *
+   * O confirm nativo trava a aba inteira, ignora o tema e mostra o domínio do
+   * Google no topo — num quadro embutido em iframe isso parece alerta do
+   * navegador, não do Kanban. Aqui o diálogo é assíncrono, então quem chama
+   * passa o que fazer no "sim" (e, se precisar, no "não").
+   *
+   * ask({ titulo, texto, confirmar, cancelar, perigo }, aoConfirmar, aoCancelar)
+   */
+  var askAberto = false;
+  var askEstado = null;
+
+  function ask(opcoes, aoConfirmar, aoCancelar) {
+    opcoes = opcoes || {};
+    // Duas perguntas ao mesmo tempo empilhariam decisões sobre o mesmo botão;
+    // a segunda é descartada para não confirmar a errada por engano.
+    if (askAberto) return;
+
+    var overlay = document.getElementById('askOverlay');
+    var ok = document.getElementById('askOk');
+    var cancel = document.getElementById('askCancel');
+    document.getElementById('askTitle').textContent = opcoes.titulo || 'Confirmar';
+    document.getElementById('askText').textContent = opcoes.texto || '';
+    ok.textContent = opcoes.confirmar || 'Confirmar';
+    cancel.textContent = opcoes.cancelar || 'Cancelar';
+    overlay.classList.toggle('danger', !!opcoes.perigo);
+    overlay.classList.add('open');
+    askAberto = true;
+
+    var focoAnterior = document.activeElement;
+    askEstado = {
+      fechar: function (confirmado) {
+        if (!askAberto) return;
+        askAberto = false;
+        askEstado = null;
+        overlay.classList.remove('open');
+        ok.onclick = null;
+        cancel.onclick = null;
+        overlay.onmousedown = null;
+        try { if (focoAnterior && focoAnterior.focus) focoAnterior.focus(); } catch (ignored) {}
+        if (confirmado) { if (aoConfirmar) aoConfirmar(); }
+        else if (aoCancelar) aoCancelar();
+      }
+    };
+
+    // Quando o "não" também é destrutivo (descartar um rascunho, por exemplo),
+    // Escape e clique fora não podem decidir por gesto ambíguo: o usuário
+    // precisa escolher um dos dois botões.
+    askEstado.exigeEscolha = !!opcoes.exigirEscolha;
+
+    ok.onclick = function () { askEstado && askEstado.fechar(true); };
+    cancel.onclick = function () { askEstado && askEstado.fechar(false); };
+    // Clique fora cancela, como em todo modal daqui; o mousedown evita que um
+    // arraste iniciado dentro do diálogo conte como clique fora.
+    overlay.onmousedown = function (ev) {
+      if (ev.target === overlay && askEstado && !askEstado.exigeEscolha) askEstado.fechar(false);
+    };
+    try { ok.focus(); } catch (ignored) {}
+  }
+
+  function askEstaAberto_() { return askAberto; }
+
   var DATA = { tasks: [], statuses: [], responsaveis: [], priorityColors: {}, warnings: [], projectId: '', projects: [] };
   var editingId = null;
   var editingTask = null;
@@ -1164,7 +1257,17 @@
 
   function archiveInboxFromUi_(index) {
     var item = INBOX_DATA.items[index];
-    if (!item || !confirm('Arquivar este item da Inbox? O histórico será preservado.')) return;
+    if (!item) return;
+    ask({
+      titulo: 'Arquivar item da Inbox',
+      texto: 'O item sai da lista de captura e o histórico é preservado.',
+      confirmar: 'Arquivar'
+    }, function () { archiveInboxConfirmado_(index); });
+  }
+
+  function archiveInboxConfirmado_(index) {
+    var item = INBOX_DATA.items[index];
+    if (!item) return;
     if (!inboxOnline_()) return;
     var metadata = inboxActionMetadata_(item, 'archive', index);
     busy(true);
@@ -1186,7 +1289,16 @@
       toast('Salve novamente como READY antes de criar a tarefa.', true);
       return;
     }
-    if (!confirm('Criar uma tarefa em BACKLOG a partir deste item revisado?')) return;
+    ask({
+      titulo: 'Criar tarefa a partir da Inbox',
+      texto: 'A tarefa nasce na coluna BACKLOG com o conteúdo revisado.',
+      confirmar: 'Criar tarefa'
+    }, function () { convertInboxConfirmado_(index); });
+  }
+
+  function convertInboxConfirmado_(index) {
+    var item = INBOX_DATA.items[index];
+    if (!item || item.status !== 'READY') return;
     if (!inboxOnline_()) return;
     var metadata = inboxActionMetadata_(item, 'convert', index);
     busy(true);
@@ -1357,9 +1469,16 @@
 
   function enviarRelatorioAoGestor_() {
     if (reportInFlight) return;
-    var botao = document.getElementById('reportButton');
-    if (!confirm('Enviar agora o relatório de acompanhamento ao gestor por e-mail?')) return;
+    ask({
+      titulo: 'Enviar relatório ao gestor',
+      texto: 'O retrato do andamento vai por e-mail agora. Para conferir antes, use "Enviar relatório de TESTE para mim" no menu da planilha.',
+      confirmar: 'Enviar agora'
+    }, enviarRelatorioConfirmado_);
+  }
 
+  function enviarRelatorioConfirmado_() {
+    if (reportInFlight) return;
+    var botao = document.getElementById('reportButton');
     reportInFlight = true;
     var rotulo = botao.textContent;
     botao.disabled = true;
@@ -1403,7 +1522,15 @@
 
   function closeAutomation_() {
     if (automationInFlight) return;
-    if (automationDirty && !confirm('Fechar a governança do fluxo? O rascunho ficará salvo neste dispositivo.')) return;
+    if (!automationDirty) { closeAutomationConfirmado_(); return; }
+    ask({
+      titulo: 'Fechar a governança do fluxo',
+      texto: 'Há alterações não salvas. O rascunho fica guardado neste dispositivo e você pode voltar nele depois.',
+      confirmar: 'Fechar'
+    }, closeAutomationConfirmado_);
+  }
+
+  function closeAutomationConfirmado_() {
     saveAutomationDraft_();
     automationDirty = false;
     document.getElementById('automationOverlay').classList.remove('open');
@@ -2239,11 +2366,12 @@
   }
 
   function cancelModal() {
-    if (formDirty) {
-      if (!confirm('Fechar o formulário? O rascunho ficará salvo para você restaurar depois.')) return;
-      saveDraft_();
-    }
-    closeModal_();
+    if (!formDirty) { closeModal_(); return; }
+    ask({
+      titulo: 'Fechar o formulário',
+      texto: 'Há alterações não salvas. O rascunho fica guardado e aparece para restaurar quando você abrir esta tarefa de novo.',
+      confirmar: 'Fechar'
+    }, function () { saveDraft_(); closeModal_(); });
   }
 
   function closeModal_() {
@@ -2429,8 +2557,19 @@
     if (!ensureWorkflowActionReady_()) return;
     var feedback = getVal('f_uatFeedback').trim();
     if (decision === 'REJECTED' && !feedback) { toast('Informe o feedback da reprovação.', true); return; }
-    var action = decision === 'APPROVED' ? 'aprovar' : 'reprovar';
-    if (!confirm('Deseja ' + action + ' o UAT desta tarefa? O status será atualizado automaticamente.')) return;
+    var aprovar = decision === 'APPROVED';
+    ask({
+      titulo: aprovar ? 'Aprovar o UAT' : 'Reprovar o UAT',
+      texto: aprovar
+        ? 'A tarefa vai para PRODUÇÃO e a aprovação fica registrada com seu nome.'
+        : 'A tarefa volta para DEV com o feedback informado, e a reprovação fica registrada com seu nome.',
+      confirmar: aprovar ? 'Aprovar' : 'Reprovar',
+      perigo: !aprovar
+    }, function () { decideUatConfirmado_(decision, feedback); });
+  }
+
+  function decideUatConfirmado_(decision, feedback) {
+    if (!ensureWorkflowActionReady_()) return;
     if (!ensureOnline_()) return;
     var metadataKey = 'uat:' + decision;
     var metadata = workflowMetadata_(metadataKey);
@@ -2564,7 +2703,16 @@
 
   function removeTask() {
     if (!editingId) return;
-    if (!confirm('Mover a tarefa ' + editingId + ' para a lixeira? Ela poderá ser restaurada.')) return;
+    ask({
+      titulo: 'Mover para a lixeira',
+      texto: 'A tarefa ' + editingId + ' sai do quadro. Ela continua na lixeira e pode ser restaurada.',
+      confirmar: 'Mover para a lixeira',
+      perigo: true
+    }, removeTaskConfirmado_);
+  }
+
+  function removeTaskConfirmado_() {
+    if (!editingId) return;
     busy(true);
     var id = editingId;
     var metadata = pendingRequestMetadata || clientMetadata_();
@@ -2681,18 +2829,31 @@
     if (!draft || draft.schemaVersion !== DRAFT_SCHEMA_VERSION || !draft.fields) return;
     var changedOnServer = editingId && Number(draft.baseVersion || 1) !== Number(editingVersion || 1);
     var when = draft.updatedAt ? new Date(draft.updatedAt).toLocaleString('pt-BR') : 'horário desconhecido';
-    var message = 'Existe um rascunho salvo em ' + when + '.\n\nOK: restaurar o rascunho.\nCancelar: usar a versão atual e descartar o rascunho.';
-    if (changedOnServer) message += '\n\nA tarefa mudou no servidor desde esse rascunho; a gravação poderá exigir revisão.';
-    if (confirm(message)) {
+    var texto = 'Você tem alterações não salvas desta tarefa, guardadas em ' + when + '.';
+    if (changedOnServer) {
+      texto += '\n\nA tarefa mudou no servidor depois desse rascunho, então salvar pode exigir revisão.';
+    }
+    texto += '\n\nDescartar apaga essas alterações e não tem desfazer.';
+
+    ask({
+      titulo: 'Rascunho não salvo',
+      texto: texto,
+      confirmar: 'Restaurar rascunho',
+      cancelar: 'Descartar',
+      // Sem escolha explícita não se apaga trabalho do usuário: aqui o
+      // "cancelar" é destrutivo, então Escape e clique fora não valem.
+      exigirEscolha: true
+    }, function () {
       applyFormFields_(draft.fields);
       editingVersion = draft.baseVersion === null || draft.baseVersion === undefined
         ? editingVersion : Number(draft.baseVersion);
       pendingRequestMetadata = draft.requestMetadata || null;
       formDirty = formSignature_() !== formBaseline;
       setDraftStatus_('Rascunho restaurado');
-    } else {
+    }, function () {
       try { localStorage.removeItem(key); } catch (ignoredToo) {}
-    }
+      setDraftStatus_('Rascunho descartado');
+    });
   }
 
   function clearDraft_() {
@@ -2746,7 +2907,14 @@
   }
 
   function restoreDeletedTask_(task) {
-    if (!confirm('Restaurar a tarefa ' + task.id + '?')) return;
+    ask({
+      titulo: 'Restaurar tarefa',
+      texto: 'A tarefa ' + task.id + ' volta para o quadro na etapa em que estava.',
+      confirmar: 'Restaurar'
+    }, function () { restoreDeletedTaskConfirmado_(task); });
+  }
+
+  function restoreDeletedTaskConfirmado_(task) {
     busy(true);
     google.script.run.withSuccessHandler(function (d) {
       closeTrash();
@@ -2850,6 +3018,25 @@
   document.getElementById('automationModal').addEventListener('input', onAutomationFormChanged_);
   document.getElementById('automationModal').addEventListener('change', onAutomationFormChanged_);
   document.addEventListener('keydown', function (ev) {
+    // A confirmação fica acima de tudo: enquanto está aberta, ela é a única
+    // que responde ao teclado. Sem isto, o Escape fecharia o modal de trás e
+    // deixaria a pergunta órfã sobre a tela.
+    if (askEstaAberto_()) {
+      if (ev.key === 'Escape') {
+        ev.preventDefault();
+        if (!askEstado.exigeEscolha) askEstado.fechar(false);
+      }
+      else if (ev.key === 'Enter') { ev.preventDefault(); askEstado.fechar(true); }
+      else if (ev.key === 'Tab') {
+        // Prende o foco nos dois botões do diálogo.
+        var ok = document.getElementById('askOk');
+        var cancel = document.getElementById('askCancel');
+        ev.preventDefault();
+        (document.activeElement === ok ? cancel : ok).focus();
+      }
+      ev.stopPropagation();
+      return;
+    }
     if ((ev.ctrlKey || ev.metaKey) && ev.key === 'Enter' &&
         document.getElementById('queryOverlay').classList.contains('open')) {
       ev.preventDefault();
