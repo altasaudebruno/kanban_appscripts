@@ -50,14 +50,47 @@ if [ -z "${DEPLOYMENTS}" ]; then
 fi
 
 echo "==> 3/4 Republicando deployment(s) na versão ${VERSAO}"
+
+# `update-deployment` imprime "Redeployed ... @N" mesmo quando o deployment
+# continua na versão anterior — visto em 23/09, logo após criar a versão.
+# Por isso cada republicação é CONFERIDA na listagem, e repetida se não pegou.
+versao_no_servidor() {
+  clasp list-deployments 2>/dev/null \
+    | grep -F "$1" \
+    | grep -Eo '@[0-9]+' \
+    | tr -d '@' \
+    | tail -1
+}
+
+FALHOU=0
 for ID in ${DEPLOYMENTS}; do
   echo "    ${ID}"
-  clasp update-deployment --versionNumber "${VERSAO}" "${ID}"
+  for TENTATIVA in 1 2 3; do
+    clasp update-deployment --versionNumber "${VERSAO}" "${ID}" >/dev/null 2>&1 || true
+    sleep 2
+    ATUAL="$(versao_no_servidor "${ID}")"
+    if [ "${ATUAL}" = "${VERSAO}" ]; then
+      echo "    confirmado na versão ${VERSAO} (tentativa ${TENTATIVA})"
+      break
+    fi
+    echo "    ainda em @${ATUAL:-?}; tentando de novo..."
+    if [ "${TENTATIVA}" = "3" ]; then
+      echo "    ERRO: não subiu para a versão ${VERSAO}." >&2
+      FALHOU=1
+    fi
+  done
 done
 
 echo "==> 4/4 Estado final"
 clasp list-deployments
 
+if [ "${FALHOU}" = "1" ]; then
+  echo >&2
+  echo "ATENÇÃO: algum deployment NÃO está na versão ${VERSAO}." >&2
+  echo "         A página do gestor seguirá mostrando a versão antiga." >&2
+  exit 1
+fi
+
 echo
-echo "Pronto. A URL /exec agora serve a versão ${VERSAO}."
+echo "Pronto: a URL publicada serve a versão ${VERSAO}."
 echo "Recarregue a página do gestor com Ctrl+F5 para furar o cache do navegador."

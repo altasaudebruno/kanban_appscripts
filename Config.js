@@ -67,6 +67,29 @@ var STATUSES = [
 ];
 
 /**
+ * Estado de um dia da agenda, com rótulo e cor — fonte única para a visão do
+ * gestor e para o relatório.
+ *
+ * AGUARDANDO_VALIDACAO existe porque "atrasado por falta de trabalho" e
+ * "parado na fila de aprovação" são coisas diferentes, e espremê-las no mesmo
+ * vermelho fazia o gestor ler como atraso o que era fila do próprio Bruno.
+ * O tom é o da etapa de validação, não o vermelho de atraso.
+ */
+var CHECKPOINT_STATES = {
+  'CONCLUÍDO':            { rotulo: 'Concluído',            light: '#15803D', dark: '#4ADE80' },
+  'HOJE':                 { rotulo: 'É hoje',               light: '#A16207', dark: '#FCD34D' },
+  'AGUARDANDO_VALIDACAO': { rotulo: 'Aguardando validação', light: '#C2410C', dark: '#FB923C' },
+  'ATRASADO':             { rotulo: 'Atrasado',             light: '#991B1B', dark: '#FB7185' },
+  'PREVISTO':             { rotulo: 'Previsto',             light: '#52637A', dark: '#94A3B8' },
+  'SEM TAREFAS':          { rotulo: 'Sem tarefas',          light: '#52637A', dark: '#94A3B8' }
+};
+
+function checkpointStateInfo_(state) {
+  return CHECKPOINT_STATES[state] ||
+    { rotulo: String(state || ''), light: '#52637A', dark: '#94A3B8' };
+}
+
+/**
  * `gestor` é o nome da etapa em português corrente, para quem acompanha de
  * fora: BACKLOG/DEVMERGE/UAT não querem dizer nada para o gestor. O nome
  * técnico continua sendo a chave e segue valendo no quadro de operação.

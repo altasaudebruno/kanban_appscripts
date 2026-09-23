@@ -46,10 +46,10 @@
   .timeline { display: grid; grid-template-columns: repeat(auto-fit, minmax(128px, 1fr)); gap: 8px; }
   .cp { background: var(--panel); border: 1px solid var(--line); border-left-width: 3px;
         border-radius: 8px; padding: 10px 12px; }
-  .cp.HOJE { border-left-color: var(--today); background: var(--panel-2); }
-  .cp.is-done { border-left-color: var(--ok); }
-  .cp.is-late { border-left-color: var(--late); }
-  .cp.is-next { border-left-color: var(--idle); }
+  .cp.HOJE { border-left-color: var(--cp, var(--today)); background: var(--panel-2); }
+  /* --cp é a cor do estado do dia, vinda do Config.js. */
+  .cp.is-done, .cp.is-late, .cp.is-waiting, .cp.is-next { border-left-color: var(--cp, var(--idle)); }
+  .cp.is-waiting { background: color-mix(in srgb, var(--cp) 10%, var(--panel)); }
   .cp .d { font-weight: 650; font-size: 13px; }
   .cp .b { font-size: 11px; color: var(--ink-soft); margin-top: 2px; }
   .cp .p { font-size: 11px; margin-top: 6px; color: var(--ink-dim); }
@@ -256,9 +256,25 @@ var CLASSE_ESTADO = {
   'NÃO INICIADO': 'idle', 'SEM TAREFAS': 'idle'
 };
 
+// Cores e rótulos dos estados de checkpoint, vindos do Config.js.
+var ESTADOS_CHECKPOINT = {};
+
+function indexarEstados(mapa) { ESTADOS_CHECKPOINT = mapa || {}; }
+
+function corDoEstado(estado) {
+  var info = ESTADOS_CHECKPOINT[estado];
+  return (info && (info.dark || info.light)) || '#94A3B8';
+}
+
+function rotuloDoEstado(estado) {
+  var info = ESTADOS_CHECKPOINT[estado];
+  return (info && info.rotulo) || estado;
+}
+
 function checkpointClasse(estado) {
   if (estado === 'CONCLUÍDO') return 'is-done';
   if (estado === 'ATRASADO') return 'is-late';
+  if (estado === 'AGUARDANDO_VALIDACAO') return 'is-waiting';
   if (estado === 'HOJE') return 'HOJE';
   return 'is-next';
 }
@@ -266,6 +282,7 @@ function checkpointClasse(estado) {
 function render(view) {
   var html = '';
   indexarPaleta(view.statuses);
+  indexarEstados(view.checkpointStates);
 
   html += '<header><h1>' + esc(view.project.name) + '</h1>' +
     '<span class="badge">somente leitura</span></header>';
@@ -298,11 +315,13 @@ function render(view) {
   if (view.checkpoints.length) {
     html += '<h2>Agenda até o piloto</h2><div class="timeline">';
     view.checkpoints.forEach(function (cp) {
-      html += '<div class="cp ' + checkpointClasse(cp.state) + '">' +
+      var corEstado = corDoEstado(cp.state);
+      html += '<div class="cp ' + checkpointClasse(cp.state) +
+        '" style="--cp:' + corEstado + '">' +
         '<div class="d">' + dataCurta(cp.date) + '</div>' +
         '<div class="b">' + esc(cp.blocks.join(' + ')) + '</div>' +
-        '<div class="p"><span class="state ' + (CLASSE_ESTADO[cp.state] || 'idle') + '">' +
-        esc(cp.state) + '</span> · ' + cp.pct + '%</div>' +
+        '<div class="p"><span class="state" style="color:' + corEstado + '">' +
+        esc(cp.stateLabel || rotuloDoEstado(cp.state)) + '</span> · ' + cp.pct + '%</div>' +
         '<div class="meta">' + esc(cp.meta) + '</div></div>';
     });
     html += '</div>';

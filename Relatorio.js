@@ -94,10 +94,12 @@ function enviarRelatorio_(opcoes) {
 
 // ------------------------------------------------------------------ corpo ----
 
+// Estados de BLOCO (calculados em planBlocks_) — não confundir com os estados
+// de dia da agenda, que vêm de CHECKPOINT_STATES no Config.js.
 var REL_CORES = {
   'CONCLUÍDO': '#15803d', 'EM ANDAMENTO': '#0369a1', 'PARCIAL': '#0369a1',
-  'ATRASADO': '#b91c1c', 'HOJE': '#a16207', 'PREVISTO': '#64748b',
-  'NÃO INICIADO': '#64748b', 'SEM TAREFAS': '#94a3b8'
+  'ATRASADO': '#991b1b', 'HOJE': '#a16207', 'PREVISTO': '#52637a',
+  'NÃO INICIADO': '#52637a', 'SEM TAREFAS': '#94a3b8'
 };
 
 var REL_ROTULOS = {
@@ -105,6 +107,11 @@ var REL_ROTULOS = {
   'ATRASADO': 'Atrasado', 'HOJE': 'É hoje', 'PREVISTO': 'Ainda não começou',
   'NÃO INICIADO': 'Não iniciado', 'SEM TAREFAS': 'Sem tarefas'
 };
+
+/** Estado de um dia da agenda: cor e rótulo saem do Config.js. */
+function relCorCheckpoint_(state) {
+  return checkpointStateInfo_(state).light;
+}
 
 function relRotulo_(estado) { return REL_ROTULOS[estado] || estado; }
 function relCor_(estado) { return REL_CORES[estado] || '#64748b'; }
@@ -333,16 +340,17 @@ function montarRelatorioHtml_(view, teste) {
       '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" ' +
       'style="' + F + ';font-size:13px;border-collapse:collapse">');
     view.checkpoints.forEach(function (cp) {
-      var cor = relCor_(cp.state);
-      var destaque = cp.state === 'HOJE' ? 'background:#fffbeb;' : '';
+      var cor = relCorCheckpoint_(cp.state);
+      var destaque = cp.state === 'HOJE' ? 'background:#fffbeb;'
+        : cp.state === 'AGUARDANDO_VALIDACAO' ? 'background:#fff7ed;' : '';
       h.push('<tr style="' + destaque + '">' +
         '<td style="padding:9px 8px 9px 0;border-top:1px solid #e2e8f0;white-space:nowrap;' +
         'color:#0f172a;font-weight:700;width:52px">' + relEsc_(relDataCurta_(cp.date)) + '</td>' +
         '<td style="padding:9px 8px;border-top:1px solid #e2e8f0;color:#475569;line-height:1.45">' +
         relEsc_(cp.meta) + '</td>' +
         '<td align="right" style="padding:9px 0 9px 8px;border-top:1px solid #e2e8f0;' +
-        'white-space:nowrap;color:' + cor + ';font-weight:700">' +
-        relEsc_(relRotulo_(cp.state)) + '</td></tr>');
+        'color:' + cor + ';font-weight:700">' +
+        relEsc_(cp.stateLabel || relRotulo_(cp.state)) + '</td></tr>');
     });
     h.push('</table></div>');
   }

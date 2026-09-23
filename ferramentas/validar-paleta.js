@@ -23,7 +23,9 @@ const path = require('path');
 const CONFIG = path.join(__dirname, '..', 'Config.js');
 const src = fs.readFileSync(CONFIG, 'utf8');
 const g = {};
-new Function('g', src + '\ng.STATUSES = STATUSES; g.PRIORITY_COLORS = PRIORITY_COLORS;')(g);
+new Function('g', src +
+  '\ng.STATUSES = STATUSES; g.PRIORITY_COLORS = PRIORITY_COLORS;' +
+  'g.CHECKPOINT_STATES = CHECKPOINT_STATES;')(g);
 const S = g.STATUSES;
 const P = g.PRIORITY_COLORS;
 
@@ -95,6 +97,31 @@ Object.keys(P).forEach(p => S.forEach(s => {
     console.log('  FALHA  status ' + s.name + ' é parecido demais com a prioridade ' + p);
   }
 }));
+
+// Estados de dia da agenda: são texto colorido sobre o cartão, nos dois temas.
+const E = g.CHECKPOINT_STATES || {};
+const PANEL_DARK = '#1E293B';
+Object.keys(E).forEach(nome => {
+  const info = E[nome];
+  if (!info.rotulo || !info.light || !info.dark) {
+    falhas++;
+    console.log('  FALHA  estado de agenda ' + nome + ' incompleto');
+    return;
+  }
+  checar('estado ' + nome + ' · claro (e-mail)', info.light, SURFACE_LIGHT, 4.5);
+  checar('estado ' + nome + ' · escuro (visão do gestor)', info.dark, PANEL_DARK, 4.5);
+});
+// "Aguardando validação" só cumpre seu papel se não for lido como atraso.
+if (E['AGUARDANDO_VALIDACAO'] && E['ATRASADO']) {
+  ['light', 'dark'].forEach(tema => {
+    const d = distancia(E['AGUARDANDO_VALIDACAO'][tema], E['ATRASADO'][tema]);
+    if (d < 70) {
+      falhas++;
+      console.log('  FALHA  aguardando validação x atrasado quase iguais no tema ' +
+        tema + ' (distância ' + d + ')');
+    }
+  });
+}
 
 // Avisos de proximidade: não reprovam, mas precisam ser conscientes.
 // Os DOIS temas são verificados — checar só um esconde metade do problema.

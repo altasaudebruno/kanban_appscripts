@@ -130,10 +130,18 @@ function getManagerView(projectId, referenceDate) {
     });
     var total = 0;
     var progress = 0;
+    var porStatus = {};
     blocksOfDay.forEach(function (block) {
       total += block.total;
       progress += block.progressPoints;
+      Object.keys(block.byStatus).forEach(function (nome) {
+        porStatus[nome] = (porStatus[nome] || 0) + block.byStatus[nome];
+      });
     });
+
+    var pendencia = planPendencia_(porStatus);
+    var state = total === 0 ? 'SEM TAREFAS'
+      : checkpointState_(entry.date, today, pendencia);
     return {
       date: entry.date,
       label: planDateLabel_(entry.date),
@@ -141,7 +149,10 @@ function getManagerView(projectId, referenceDate) {
       meta: entry.meta,
       total: total,
       pct: total ? Math.round((progress / total) * 100) : 0,
-      state: total === 0 ? 'SEM TAREFAS' : checkpointState_(entry.date, today, progress / total)
+      state: state,
+      aguardandoValidacao: pendencia.aguardando,
+      naoComecados: pendencia.naoProntos,
+      stateLabel: checkpointRotulo_(state, pendencia)
     };
   });
 
@@ -178,6 +189,7 @@ function getManagerView(projectId, referenceDate) {
     // A paleta viaja junto para a visão do gestor e o relatório usarem a mesma
     // cor de status do quadro, sem redefinir os tons em cada tela.
     statuses: board.statuses,
+    checkpointStates: CHECKPOINT_STATES,
     resumo: planResumoTopo_(blocks, tasks, today, agenda, checkpoints),
     avisoProjeto: planFallbackAviso_(resolvido),
     lastUpdate: lastUpdate,
@@ -398,11 +410,59 @@ function taskProgress_(task) {
   return Math.max(byStatus, Math.min(declared, 1));
 }
 
-function checkpointState_(date, today, ratio) {
-  if (ratio >= 1) return 'CONCLUÍDO';
-  if (date < today) return 'ATRASADO';
+/** Etapas que só dependem de alguém olhar e aprovar, não de mais trabalho. */
+var STATUS_AGUARDANDO_VALIDACAO = ['DEVMERGE', 'UAT'];
+
+/**
+ * Separa a pendência de um dia em "já feito, esperando aprovação" e "ainda
+ * não pronto". DEV conta como não pronto: código em desenvolvimento ainda
+ * pode mudar, não está na fila de ninguém.
+ */
+function planPendencia_(porStatus) {
+  porStatus = porStatus || {};
+  var aguardando = 0;
+  var naoProntos = 0;
+  Object.keys(porStatus).forEach(function (nome) {
+    if (nome === DONE_STATUS) return;
+    var quantos = porStatus[nome] || 0;
+    if (STATUS_AGUARDANDO_VALIDACAO.indexOf(nome) !== -1) aguardando += quantos;
+    else naoProntos += quantos;
+  });
+  return {
+    aguardando: aguardando,
+    naoProntos: naoProntos,
+    pendentes: aguardando + naoProntos
+  };
+}
+
+/**
+ * Estado do dia na agenda.
+ *
+ * A data ter passado não basta para chamar de atraso: se tudo que falta já
+ * está pronto e parado na fila de validação, quem precisa agir é o validador,
+ * não o executor. Mas basta UMA pendência ainda não implementada para voltar a
+ * ser atraso de verdade — o estado suave não pode encobrir trabalho que não
+ * aconteceu.
+ */
+function checkpointState_(date, today, pendencia) {
+  if (!pendencia || pendencia.pendentes === 0) return 'CONCLUÍDO';
   if (date === today) return 'HOJE';
-  return 'PREVISTO';
+  if (date > today) return 'PREVISTO';
+  if (pendencia.naoProntos === 0 && pendencia.aguardando > 0) return 'AGUARDANDO_VALIDACAO';
+  return 'ATRASADO';
+}
+
+/**
+ * Rótulo do estado. No atraso misto, dizer quantos itens já estão só
+ * esperando aprovação evita que a fila do validador pese como se fosse
+ * trabalho parado.
+ */
+function checkpointRotulo_(state, pendencia) {
+  var base = checkpointStateInfo_(state).rotulo;
+  if (state === 'ATRASADO' && pendencia && pendencia.aguardando > 0) {
+    return base + ' · ' + pendencia.aguardando + ' aguardando validação';
+  }
+  return base;
 }
 
 /** Último evento de auditoria por tarefa; varre no máximo as 3000 linhas finais. */

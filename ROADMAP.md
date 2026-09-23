@@ -186,6 +186,28 @@ planilha, no quadro, na visão do gestor e no relatório.
 
 ---
 
+## 3.1 Como o calendário classifica cada dia
+
+Estados em `CHECKPOINT_STATES` (`Config.js`), com cor e rótulo próprios:
+
+| Estado | Quando | Rótulo |
+|---|---|---|
+| Concluído | nada pendente | Concluído |
+| É hoje | a data é hoje | É hoje |
+| Previsto | a data ainda vem | Previsto |
+| **Aguardando validação** | data vencida e **tudo** que falta está em DEVMERGE/UAT | Aguardando validação |
+| Atrasado | data vencida e há algo em BACKLOG/NÃO-INICIADO/DEV | Atrasado · N aguardando validação |
+
+A distinção existe porque "atrasado por falta de trabalho" e "parado na fila de
+aprovação" não são a mesma coisa — espremidos no mesmo vermelho, o gestor lia
+como atraso o que era fila do próprio Bruno. **Uma única pendência ainda não
+implementada mantém o dia como atraso de verdade**; a contagem no rótulo mostra
+quanto daquilo só espera aprovação. `DEV` conta como não pronto: código em
+desenvolvimento ainda pode mudar.
+
+Regra coberta por `node ferramentas/testar-agenda.js` (com prova de mutação nos
+dois sentidos).
+
 ## 4.1 Regra que já custou uma confusão
 
 **Mudou algo que o gestor vê? `clasp push` não basta.** A URL `/exec` serve a
